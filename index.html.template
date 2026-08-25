@@ -2280,7 +2280,7 @@ async function exportImages(build) {
     const scale = 1.15;
     const dw = Math.round(lg.width * scale);
     const dh = Math.round(lg.height * scale);
-    const centerX = 200;
+    const centerX = 195;
     const centerY = Math.round(dh / 2) + 4;  // 下移，保证 logo 完整可见 (dy≈4)
     const dx = centerX - Math.round(dw / 2);
     const dy = centerY - Math.round(dh / 2);
