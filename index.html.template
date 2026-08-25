@@ -2179,13 +2179,14 @@ async function exportImages(build) {
   // 封面图（第一页上方，标题栏之上）
   if (build.cover && imgCache[build.cover]) {
     const cv = imgCache[build.cover];
-    const maxW = 480;        // 封面最大宽
-    const maxH = 320;        // 封面最大高（在标题栏 445 之上）
+    // logo 占左侧 (x31-420, y26-260) → 封面从 x=440 开始避免遮挡
+    const maxW = 480;
+    const maxH = 320;
     let cw = cv.width, ch = cv.height;
     const scale = Math.min(maxW / cw, maxH / ch);
     cw = Math.round(cw * scale);
     ch = Math.round(ch * scale);
-    const cx = PAD_X;                    // 左对齐内容区
+    const cx = 440;                      // 让出 logo 区域
     const cy = 80;                       // 顶部边距
     // 阴影
     ctx.fillStyle = 'rgba(124,95,182,0.18)';
@@ -2200,11 +2201,11 @@ async function exportImages(build) {
     ctx.stroke();
   }
 
-  // Pokemon Pokopia logo：固定画在原 bg1 logo 的位置 (x31-248, y26-170)
+  // Pokemon Pokopia logo：固定画在原 bg1 logo 的位置 (x31-419, y26-259)
   // 覆盖被封面遮挡的原 logo；不跟封面走，独立绝对定位
   if (imgCache.__LOGO) {
     const lg = imgCache.__LOGO;
-    const boxX = 31, boxY = 26, boxW = 218, boxH = 145;
+    const boxX = 31, boxY = 26, boxW = 389, boxH = 234;
     // contain 模式：保持宽高比，居中填入 box
     const s = Math.min(boxW / lg.width, boxH / lg.height);
     const dw = Math.round(lg.width * s);
