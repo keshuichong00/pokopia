@@ -1925,11 +1925,11 @@ async function exportImages(build) {
   const CELL_W = 270;
   const CELL_GAP = (CW - COLS * CELL_W) / (COLS - 1);
   const ICON_SIZE = 170;              // 图标尺寸 (原 200 -> 170，更紧凑)
-  const NAME_FONT = 28;               // 道具名字号 (放大2号)
-  const NAME_LINE_H = 34;
+  const NAME_FONT = 32;               // 道具名字号
+  const NAME_LINE_H = 38;
   const NAME_MAX_LINES = 2;
-  const QTY_FONT = 22;
-  const SEC_TITLE_FONT = 28;
+  const QTY_FONT = 24;
+  const SEC_TITLE_FONT = 32;
   const SECTION_GAP = 30;
   const CELL_H = ICON_SIZE + 12 + NAME_LINE_H * NAME_MAX_LINES + 8;
   const ROW_GAP = 28;
