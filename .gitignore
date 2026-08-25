@@ -1,0 +1,5 @@
+# Build artifacts (can be regenerated from template + build.py)
+index.html
+
+# Large base64 cache files (regenerated from .jpg by build.py)
+*.b64

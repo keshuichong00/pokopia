@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pokopia 攻略材料单</title>
+<style>
+  :root {
+    --bg: #fdf7f7;
+    --card: #ffffff;
+    --primary: #b59ad9;
+    --primary-light: #e8def8;
+    --primary-dark: #7c5fb6;
+    --accent: #f0b8d4;
+    --text: #2c2138;
+    --text-light: #756a8a;
+    --border: #ebe1f0;
+    --shadow: 0 2px 8px rgba(124,95,182,0.08);
+    --shadow-md: 0 4px 16px rgba(124,95,182,0.12);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+  input, textarea, select { font: inherit; }
+  a { color: var(--primary-dark); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ===== Layout ===== */
+  .topbar {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow);
+  }
+  .topbar .logo { font-size: 18px; font-weight: 700; color: var(--primary-dark); display: flex; align-items: center; gap: 8px; }
+  .topbar .logo-icon { font-size: 22px; }
+  .topbar .crumb { color: var(--text-light); font-size: 14px; }
+  .topbar .crumb b { color: var(--text); }
+  .topbar .spacer { flex: 1; }
+  .topbar .actions { display: flex; gap: 8px; }
+
+  .container { max-width: 1280px; margin: 0 auto; padding: 24px; }
+
+  /* ===== Buttons ===== */
+  .btn {
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-secondary { background: var(--primary-light); color: var(--primary-dark); }
+  .btn-secondary:hover { background: var(--primary); color: white; }
+  .btn-ghost { color: var(--text-light); }
+  .btn-ghost:hover { background: var(--border); }
+  .btn-danger { color: #c44; }
+  .btn-danger:hover { background: #fee; }
+  .btn-sm { padding: 4px 10px; font-size: 12px; }
+  .btn-lg { padding: 12px 24px; font-size: 16px; }
+  .btn-icon { padding: 6px; border-radius: 50%; width: 32px; height: 32px; justify-content: center; }
+
+  /* ===== Custom Confirm Modal ===== */
+  .confirm-overlay {
+    position: fixed; inset: 0;
+    background: rgba(44,33,56,0.5);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 2000;
+    padding: 20px;
+  }
+  .confirm-box {
+    background: white;
+    border-radius: var(--radius);
+    padding: 24px;
+    width: 100%; max-width: 380px;
+    box-shadow: var(--shadow-md);
+  }
+  .confirm-box h3 { font-size: 16px; margin-bottom: 8px; color: var(--text); }
+  .confirm-box .actions {
+    display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px;
+  }
+
+  /* ===== Home Card Delete (hover) ===== */
+  .build-card { position: relative; }
+  .build-card-delete {
+    position: absolute;
+    top: 8px; right: 8px;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.92);
+    display: none;
+    align-items: center; justify-content: center;
+    font-size: 14px;
+    color: #c44;
+    z-index: 2;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  }
+  .build-card-delete:hover { background: #fee; }
+  .build-card:hover .build-card-delete { display: flex; }
+
+  /* ===== Dye (染色) Feature ===== */
+  .item-cell .item-dye {
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    background: rgba(255,255,255,0.95);
+    border: 1.5px solid rgba(0,0,0,0.15);
+    cursor: pointer;
+    z-index: 2;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .item-cell .item-dye:hover {
+    transform: scale(1.15);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+  .item-cell .item-dye.dyed {
+    border-color: rgba(0,0,0,0.35);
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.9);
+  }
+  .item-cell .item-name .item-dye-indicator {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    margin-left: 4px;
+    vertical-align: middle;
+    border: 1px solid rgba(0,0,0,0.2);
+    position: relative;
+    top: -2px;
+  }
+  .item-cell .item-dye-clear-x {
+    position: absolute;
+    top: -4px; right: -4px;
+    width: 12px; height: 12px;
+    background: #c44; color: white;
+    border-radius: 50%;
+    font-size: 9px;
+    display: flex; align-items: center; justify-content: center;
+    line-height: 1;
+  }
+
+  .dye-picker-overlay {
+    position: fixed; inset: 0;
+    background: rgba(44,33,56,0.5);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1500;
+    padding: 20px;
+  }
+  .dye-picker {
+    background: white;
+    border-radius: var(--radius);
+    padding: 20px;
+    width: 100%; max-width: 400px;
+    box-shadow: var(--shadow-md);
+  }
+  .dye-picker h3 { font-size: 16px; margin-bottom: 4px; }
+  .dye-picker .hint { font-size: 12px; color: var(--text-light); margin-bottom: 12px; }
+  .dye-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+  }
+  .dye-picker-cell {
+    aspect-ratio: 1;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid rgba(0,0,0,0.15);
+    transition: all 0.15s;
+    position: relative;
+  }
+  .dye-picker-cell:hover {
+    transform: scale(1.15);
+    border-color: var(--primary-dark);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .dye-picker-cell.selected {
+    border-color: var(--primary-dark);
+    box-shadow: 0 0 0 3px rgba(124,95,182,0.3);
+  }
+  .dye-picker-cell .name {
+    position: absolute;
+    bottom: -22px; left: 50%; transform: translateX(-50%);
+    font-size: 11px; color: var(--text-light);
+    white-space: nowrap;
+  }
+  .dye-picker-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 24px; padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ===== Home: Build library ===== */
+  .library-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .library-title { font-size: 24px; font-weight: 700; }
+  .library-subtitle { color: var(--text-light); font-size: 14px; margin-top: 4px; }
+
+  .build-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+  .build-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: all 0.2s;
+    cursor: pointer;
+    border: 2px solid transparent;
+  }
+  .build-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--primary-light); }
+  .build-card .cover {
+    width: 100%; aspect-ratio: 4/3; background: var(--primary-light);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 48px; color: var(--primary); position: relative; overflow: hidden;
+  }
+  .build-card .cover img { width: 100%; height: 100%; object-fit: cover; }
+  .build-card .info { padding: 12px 14px; }
+  .build-card .name { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  .build-card .meta { display: flex; justify-content: space-between; color: var(--text-light); font-size: 12px; }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text-light); }
+  .empty-state .icon { font-size: 64px; margin-bottom: 16px; opacity: 0.5; }
+  .empty-state h3 { color: var(--text); font-size: 18px; margin-bottom: 8px; }
+
+  /* ===== Editor ===== */
+  .editor-panel {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+  }
+  .editor-row { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+  .editor-row label { color: var(--text-light); font-size: 13px; min-width: 60px; }
+  .editor-row input[type="text"] {
+    flex: 1; min-width: 200px;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    transition: border-color 0.15s;
+  }
+  .editor-row input[type="text"]:focus { outline: none; border-color: var(--primary); }
+  .cover-uploader {
+    width: 160px; height: 120px; background: var(--primary-light);
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; overflow: hidden; position: relative;
+    color: var(--primary-dark); font-size: 13px;
+  }
+  .cover-uploader img { width: 100%; height: 100%; object-fit: cover; }
+  .cover-uploader:hover { background: var(--primary); color: white; }
+
+  .section-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .section-title-input {
+    flex: 1;
+    font-size: 16px; font-weight: 600;
+    padding: 6px 10px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+  }
+  .section-title-input:focus { outline: none; border-color: var(--primary); background: white; }
+  .section-preview {
+    width: 60px; height: 60px;
+    background: var(--primary-light);
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; overflow: hidden; font-size: 11px; color: var(--text-light);
+    flex-shrink: 0;
+  }
+  .section-preview img { width: 100%; height: 100%; object-fit: cover; }
+  .section-preview:hover { background: var(--primary); color: white; }
+
+  .item-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+  }
+  @media (max-width: 768px) { .item-grid { grid-template-columns: repeat(4, 1fr); } }
+  .item-cell {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 6px;
+    text-align: center;
+    position: relative;
+    transition: all 0.15s;
+  }
+  .item-cell:hover { border-color: var(--primary); box-shadow: var(--shadow); }
+  .item-cell .item-icon {
+    width: 100%; aspect-ratio: 1;
+    background: var(--bg);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 4px; overflow: hidden;
+  }
+  .item-cell .item-icon img { width: 100%; height: 100%; object-fit: contain; }
+  .item-cell .item-name {
+    font-size: 13px; line-height: 1.3;
+    color: var(--text);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 32px;
+    margin-top: 4px;
+  }
+  .item-cell .item-qty {
+    font-size: 12px; color: var(--primary-dark); font-weight: 600;
+    margin-top: 2px;
+  }
+  .item-cell .item-remove {
+    position: absolute;
+    top: 2px; right: 2px;
+    width: 20px; height: 20px;
+    background: rgba(255,255,255,0.9);
+    border-radius: 50%;
+    display: none; align-items: center; justify-content: center;
+    font-size: 12px; color: #c44;
+  }
+  .item-cell:hover .item-remove { display: flex; }
+  .item-cell .item-edit {
+    position: absolute; top: 2px; left: 2px;
+    width: 20px; height: 20px;
+    background: rgba(255,255,255,0.9);
+    border-radius: 50%;
+    display: none; align-items: center; justify-content: center;
+    font-size: 11px; color: var(--primary-dark);
+  }
+  .item-cell:hover .item-edit { display: flex; }
+  .item-cell .item-add-slot {
+    background: var(--bg);
+    border: 2px dashed var(--border);
+    cursor: pointer;
+    color: var(--text-light);
+    font-size: 24px;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 90px;
+  }
+  .item-cell .item-add-slot:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+
+  /* ===== Item Picker Modal ===== */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(44,33,56,0.5);
+    display: none; align-items: center; justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card);
+    border-radius: var(--radius);
+    width: 100%; max-width: 900px; max-height: 85vh;
+    display: flex; flex-direction: column;
+    box-shadow: var(--shadow-md);
+  }
+  .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+  .modal-title { font-size: 16px; font-weight: 600; }
+  .modal-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
+  .modal-footer { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+
+  .search-box {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+  }
+  .search-box:focus { outline: none; border-color: var(--primary); }
+  .cat-filter {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: white;
+    font-size: 13px;
+  }
+
+  .picker-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 8px;
+  }
+  .picker-cell {
+    background: white;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 4px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .picker-cell:hover { border-color: var(--primary); transform: scale(1.05); box-shadow: var(--shadow); }
+  .picker-cell .picker-icon { width: 100%; aspect-ratio: 1; overflow: hidden; }
+  .picker-cell .picker-icon img { width: 100%; height: 100%; object-fit: contain; }
+  .picker-cell .picker-name {
+    font-size: 10px; line-height: 1.2;
+    color: var(--text);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-top: 2px;
+    min-height: 24px;
+  }
+  .picker-empty { text-align: center; padding: 40px; color: var(--text-light); }
+
+  /* ===== Viewer (Reference image style) ===== */
+  .viewer {
+    max-width: 720px;
+    margin: 0 auto;
+    background: var(--card);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+  }
+  .viewer-banner {
+    background: linear-gradient(135deg, #fef0c8, #fde4b8);
+    padding: 16px 20px;
+    display: flex; align-items: center; gap: 16px;
+    border-bottom: 3px solid var(--primary);
+  }
+  .viewer-banner .cover {
+    width: 100px; height: 80px;
+    background: var(--primary-light);
+    border-radius: var(--radius-sm);
+    overflow: hidden; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px;
+  }
+  .viewer-banner .cover img { width: 100%; height: 100%; object-fit: cover; }
+  .viewer-banner .title-block { flex: 1; }
+  .viewer-banner h1 { font-size: 22px; font-weight: 800; color: var(--primary-dark); margin-bottom: 4px; }
+  .viewer-banner .subtitle { font-size: 14px; color: var(--text-light); font-style: italic; }
+  .viewer-body { padding: 0; }
+  .viewer-section { padding: 20px 20px 0; }
+  .viewer-section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .viewer-section-preview {
+    width: 100px; height: 75px;
+    background: var(--primary-light);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; color: var(--primary);
+  }
+  .viewer-section-preview img { width: 100%; height: 100%; object-fit: cover; }
+  .viewer-section-title {
+    background: var(--primary); color: white;
+    padding: 4px 12px; border-radius: 6px;
+    font-size: 14px; font-weight: 600;
+  }
+  .viewer-section-divider {
+    border-top: 2px dashed var(--primary);
+    margin: 20px 0;
+  }
+  .viewer-footer {
+    padding: 12px 20px;
+    display: flex; justify-content: space-between;
+    background: #fef7e0;
+    font-size: 13px;
+    color: var(--text-light);
+    margin-top: 20px;
+  }
+  .viewer-footer .author { font-weight: 600; color: var(--text); }
+
+  /* Viewer 备注区（自由文字，仅当非空时显示） */
+  .viewer-notes {
+    padding: 20px 24px 24px;
+    border-top: 2px dashed var(--primary);
+    margin: 0 20px;
+  }
+  .viewer-section-notes {
+    margin-top: 12px;
+    padding: 0 4px;
+  }
+  .viewer-notes-content {
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: #fdf7f7;
+    padding: 16px 20px;
+    border-radius: var(--radius-sm);
+    border-left: 4px solid var(--primary);
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--text); color: white;
+    padding: 10px 20px; border-radius: var(--radius-sm);
+    font-size: 14px; opacity: 0; transition: opacity 0.2s;
+    z-index: 2000; pointer-events: none;
+  }
+  .toast.show { opacity: 0.9; }
+
+  /* Hide elements */
+  .hidden { display: none !important; }
+
+  /* Print: viewer fits in */
+  @media print {
+    .topbar, .btn, .no-print { display: none !important; }
+    .viewer { box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div class="logo" id="logo">
+    <span class="logo-icon">🏠</span>
+    <span>Pokopia 攻略材料单</span>
+  </div>
+  <div class="crumb" id="crumb"></div>
+  <div class="spacer"></div>
+  <div class="actions" id="topActions"></div>
+</div>
+
+<!-- App container -->
+<div class="container" id="app"></div>
+
+<!-- Item Picker Modal -->
+<div class="modal-overlay" id="pickerModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">选择道具</span>
+      <input type="text" class="search-box" id="pickerSearch" placeholder="搜索道具名（中/英）…">
+      <select class="cat-filter" id="pickerCategory">
+        <option value="">全部分类</option>
+      </select>
+      <button class="btn-icon btn-ghost" id="pickerClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="picker-grid" id="pickerGrid"></div>
+    </div>
+    <div class="modal-footer">
+      <span id="pickerCount" style="color:var(--text-light); font-size:12px; margin-right:auto;"></span>
+      <button class="btn btn-ghost" id="pickerCancel">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== Embedded Items Data (1697) =====
+const ITEMS_RAW = /*#__INLINE_ITEMS__*/null;
+
+// 导出图片背景附件 (附件1: 第一张; 附件2: 第二张及续页)
+const BG1 = /*#__INLINE_BG1__*/'';
+const BG2 = /*#__INLINE_BG2__*/'';
+
+const CATEGORY_ZH = {
+  'Buildings': '建筑', 'Furniture': '家具', 'Utilities': '功能',
+  'Outdoor': '户外', 'Nature': '自然', 'Food': '食物',
+  'Materials': '材料', 'Blocks': '地块', 'Misc.': '杂项',
+  'Kits': '套组', 'Key Items': '重要物品', 'Other': '其他'
+};
+const CATEGORY_ORDER = ['Buildings','Furniture','Utilities','Outdoor','Nature','Food','Materials','Blocks','Misc.','Kits','Key Items','Other'];
+
+// ===== 染料颜色（来自 Pokopia 游戏内的 18 种彩色气球/8 种颜料）=====
+const DYE_COLORS = [
+  { id: 'white',      name: '白',   color: '#ffffff' },
+  { id: 'black',      name: '黑',   color: '#2c2c2c' },
+  { id: 'red',        name: '红',   color: '#e53935' },
+  { id: 'orange',     name: '橙',   color: '#fb8c00' },
+  { id: 'yellow',     name: '黄',   color: '#fdd835' },
+  { id: 'lime',       name: '嫩绿', color: '#c0ca33' },
+  { id: 'green',      name: '绿',   color: '#43a047' },
+  { id: 'aquamarine', name: '蓝绿', color: '#64ffda' },
+  { id: 'cyan',       name: '青',   color: '#26c6da' },
+  { id: 'navy',       name: '藏青', color: '#1a237e' },
+  { id: 'blue',       name: '蓝',   color: '#1e88e5' },
+  { id: 'purple',     name: '紫',   color: '#8e24aa' },
+  { id: 'plum',       name: '深紫', color: '#6a1b9a' },
+  { id: 'rose',       name: '玫红', color: '#e91e63' },
+  { id: 'pink',       name: '粉',   color: '#f8bbd0' },
+  { id: 'beige',      name: '米',   color: '#d7ccc8' },
+  { id: 'brown',      name: '棕',   color: '#795548' },
+  { id: 'gray',       name: '灰',   color: '#9e9e9e' },
+];
+const DYE_BY_ID = {};
+DYE_COLORS.forEach(d => { DYE_BY_ID[d.id] = d; });
+
+// 解析成便于查询的结构
+const ITEMS = ITEMS_RAW.map(r => ({
+  id: r[0], nameZh: r[1], nameEn: r[2], category: r[3], image: r[4]
+}));
+const ITEMS_BY_ID = {};
+const ITEMS_BY_NAME = {};
+ITEMS.forEach(it => {
+  ITEMS_BY_ID[it.id] = it;
+  const key = it.nameZh.toLowerCase();
+  (ITEMS_BY_NAME[key] = ITEMS_BY_NAME[key] || []).push(it);
+});
+
+// ===== Storage =====
+const STORAGE_KEY = 'pokopia_builds_v1';
+function loadBuilds() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}').builds || {}; }
+  catch { return {}; }
+}
+function saveBuilds(builds) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ builds, updatedAt: Date.now() }));
+}
+function genId() { return 'b_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6); }
+
+// ===== State =====
+let state = {
+  route: 'home', // home | editor | viewer
+  builds: loadBuilds(),
+  currentBuildId: null,
+  draftBuild: null, // 编辑中
+  pickerTarget: null, // {sectionIdx}  选完道具加到哪个分区
+  pickerCallback: null,
+};
+
+// ===== Utils =====
+function $(s) { return document.querySelector(s); }
+function $$(s) { return Array.from(document.querySelectorAll(s)); }
+function el(tag, attrs = {}, ...children) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') e.className = v;
+    else if (k === 'style') Object.assign(e.style, v);
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2).toLowerCase(), v);
+    else if (k === 'html') e.innerHTML = v;
+    else e.setAttribute(k, v);
+  }
+  children.flat().forEach(c => {
+    if (c == null || c === false) return;
+    if (typeof c === 'string' || typeof c === 'number') e.appendChild(document.createTextNode(c));
+    else e.appendChild(c);
+  });
+  return e;
+}
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// 自定义确认弹窗（不依赖浏览器原生 confirm，避免某些环境下失效）
+function customConfirm(message) {
+  return new Promise(resolve => {
+    const overlay = el('div', { class: 'confirm-overlay' });
+    const box = el('div', { class: 'confirm-box' });
+    box.appendChild(el('h3', {}, '⚠️ ' + message));
+    const actions = el('div', { class: 'actions' });
+    const cancelBtn = el('button', { class: 'btn btn-ghost', onclick: () => { overlay.remove(); resolve(false); } }, '取消');
+    const okBtn = el('button', { class: 'btn btn-primary', style: { background: '#c44' } }, '确定');
+    okBtn.onclick = () => { overlay.remove(); resolve(true); };
+    actions.appendChild(cancelBtn);
+    actions.appendChild(okBtn);
+    box.appendChild(actions);
+    overlay.appendChild(box);
+    overlay.addEventListener('click', e => { if (e.target === overlay) { overlay.remove(); resolve(false); } });
+    document.body.appendChild(overlay);
+    setTimeout(() => okBtn.focus(), 50);
+  });
+}
+function totalItems(b) {
+  return (b.sections || []).reduce((s, sec) => s + (sec.items || []).length, 0);
+}
+
+// ===== Router =====
+function navigate(route, params = {}) {
+  state.route = route;
+  if (params.buildId !== undefined) state.currentBuildId = params.buildId;
+  if (params.build) state.draftBuild = params.build;
+  render();
+  window.scrollTo(0, 0);
+}
+
+function render() {
+  renderTopbar();
+  const app = $('#app');
+  app.innerHTML = '';
+  if (state.route === 'home') renderHome(app);
+  else if (state.route === 'editor') renderEditor(app);
+  else if (state.route === 'viewer') renderViewer(app);
+}
+
+// ===== Topbar =====
+function renderTopbar() {
+  const logo = $('#logo');
+  logo.onclick = () => navigate('home');
+  const crumb = $('#crumb');
+  const actions = $('#topActions');
+  crumb.innerHTML = '';
+  actions.innerHTML = '';
+  if (state.route === 'home') {
+    crumb.innerHTML = '<b>材料单库</b>';
+    actions.appendChild(el('button', { class: 'btn btn-primary', onclick: () => createNewBuild() }, '＋ 新建材料单'));
+  } else if (state.route === 'editor') {
+    crumb.innerHTML = '编辑材料单';
+    actions.appendChild(el('button', { class: 'btn btn-ghost', onclick: async () => {
+      if (await customConfirm('放弃当前编辑？')) navigate('home');
+    } }, '← 返回'));
+    actions.appendChild(el('button', { class: 'btn btn-primary', onclick: () => saveDraft() }, '💾 保存'));
+  } else if (state.route === 'viewer') {
+    crumb.innerHTML = '查看材料单';
+    const b = state.builds[state.currentBuildId];
+    if (b) {
+      actions.appendChild(el('button', { class: 'btn btn-secondary', onclick: () => exportBuildJSON() }, '📋 导出JSON'));
+      actions.appendChild(el('button', { class: 'btn btn-secondary', onclick: () => exportImages(b) }, '🖼️ 导出图片'));
+      actions.appendChild(el('button', { class: 'btn btn-secondary', onclick: () => editBuild(state.currentBuildId) }, '✏️ 编辑'));
+      actions.appendChild(el('button', { class: 'btn btn-ghost', onclick: () => deleteBuild(state.currentBuildId) }, '🗑️ 删除'));
+      actions.appendChild(el('button', { class: 'btn btn-ghost', onclick: () => navigate('home') }, '← 返回'));
+    }
+  }
+}
+
+// ===== Home =====
+function renderHome(app) {
+  const builds = Object.values(state.builds).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  app.appendChild(el('div', { class: 'library-header' },
+    el('div', {},
+      el('div', { class: 'library-title' }, '🏠 我的材料单'),
+      el('div', { class: 'library-subtitle' }, `共 ${builds.length} 个攻略 · ${ITEMS.length.toLocaleString()} 个可用道具`),
+    ),
+    el('div', {},
+      el('button', { class: 'btn btn-secondary', onclick: () => importBuild() }, '📥 导入'),
+      el('button', { class: 'btn btn-primary', onclick: () => createNewBuild(), style: { marginLeft: '8px' } }, '＋ 新建材料单'),
+    ),
+  ));
+
+  if (builds.length === 0) {
+    app.appendChild(el('div', { class: 'empty-state' },
+      el('div', { class: 'icon' }, '🏗️'),
+      el('h3', {}, '还没有材料单'),
+      el('p', {}, '点击右上角「＋ 新建材料单」开始你的第一个攻略'),
+    ));
+  } else {
+    const grid = el('div', { class: 'build-grid' });
+    builds.forEach(b => {
+      const card = el('div', { class: 'build-card', onclick: () => navigate('viewer', { buildId: b.id }) });
+      const cover = el('div', { class: 'cover' });
+      if (b.cover) {
+        cover.appendChild(el('img', { src: b.cover, alt: b.name }));
+      } else {
+        cover.textContent = '🏠';
+      }
+      card.appendChild(cover);
+      // 删除按钮（悬停显示，避免误删）
+      const delBtn = el('div', { class: 'build-card-delete', title: '删除', onclick: async e => {
+        e.stopPropagation();
+        const ok = await customConfirm(`确定删除「${b.name || '未命名'}」？此操作不可撤销。`);
+        if (!ok) return;
+        delete state.builds[b.id];
+        saveBuilds(state.builds);
+        toast('已删除 ✓');
+        render();
+      } }, '🗑️');
+      card.appendChild(delBtn);
+      card.appendChild(el('div', { class: 'info' },
+        el('div', { class: 'name' }, b.name || '未命名'),
+        el('div', { class: 'meta' },
+          el('span', {}, '@' + (b.author || 'anonymous')),
+          el('span', {}, `📦 ${totalItems(b)} 件 · 🧩 ${(b.sections||[]).length} 分区`),
+        ),
+      ));
+      grid.appendChild(card);
+    });
+    app.appendChild(grid);
+  }
+}
+
+// ===== Editor =====
+function createNewBuild() {
+  navigate('editor', {
+    build: {
+      id: genId(),
+      name: '新材料单',
+      author: '',
+      cover: '',
+      sections: [{ title: '分区 1', preview: '', items: [], notes: '' }],
+      notes: '', // 全局备注（在所有分区下方）
+      createdAt: Date.now(),
+    }
+  });
+}
+
+function editBuild(id) {
+  const b = state.builds[id];
+  if (!b) return toast('找不到该材料单');
+  navigate('editor', { build: JSON.parse(JSON.stringify(b)) });
+}
+
+function saveDraft() {
+  const b = state.draftBuild;
+  if (!b) return;
+  if (!b.name?.trim()) { toast('请填写材料单名称'); return; }
+  b.updatedAt = Date.now();
+  state.builds[b.id] = b;
+  saveBuilds(state.builds);
+  toast('已保存 ✓');
+  setTimeout(() => navigate('viewer', { buildId: b.id }), 600);
+}
+
+async function deleteBuild(id) {
+  const ok = await customConfirm('确定删除这个材料单？此操作不可撤销。');
+  if (!ok) return;
+  delete state.builds[id];
+  saveBuilds(state.builds);
+  toast('已删除 ✓');
+  navigate('home');
+}
+
+function importBuild() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'application/json';
+  input.onchange = e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const data = JSON.parse(r.result);
+        if (!data.id || !data.sections) throw new Error('格式错误');
+        data.id = genId(); // 重新分配 ID
+        state.builds[data.id] = data;
+        saveBuilds(state.builds);
+        toast('导入成功 ✓');
+        render();
+      } catch (e) { toast('导入失败：' + e.message); }
+    };
+    r.readAsText(f);
+  };
+  input.click();
+}
+
+function renderEditor(app) {
+  const b = state.draftBuild;
+  if (!b) { navigate('home'); return; }
+
+  // 基本信息面板
+  const infoPanel = el('div', { class: 'editor-panel' });
+  infoPanel.appendChild(el('div', { class: 'editor-row' },
+    el('label', {}, '名称'),
+    el('input', { type: 'text', value: b.name || '', oninput: e => b.name = e.target.value, placeholder: '如：露营车' }),
+  ));
+  infoPanel.appendChild(el('div', { class: 'editor-row' },
+    el('label', {}, '作者'),
+    el('input', { type: 'text', value: b.author || '', oninput: e => b.author = e.target.value, placeholder: '如：瞌睡虫' }),
+  ));
+  const coverRow = el('div', { class: 'editor-row' });
+  coverRow.appendChild(el('label', {}, '封面图'));
+  const coverEl = el('div', { class: 'cover-uploader' });
+  if (b.cover) {
+    coverEl.appendChild(el('img', { src: b.cover }));
+  } else {
+    coverEl.appendChild(document.createTextNode('点击上传封面'));
+  }
+  coverEl.onclick = () => uploadImage(dataUrl => { b.cover = dataUrl; render(); });
+  coverRow.appendChild(coverEl);
+  if (b.cover) {
+    coverRow.appendChild(el('button', { class: 'btn btn-sm btn-ghost', onclick: () => { b.cover = ''; render(); } }, '移除封面'));
+  }
+  infoPanel.appendChild(coverRow);
+  app.appendChild(infoPanel);
+
+  // 分区列表
+  (b.sections || []).forEach((sec, sIdx) => {
+    app.appendChild(renderSectionEditor(b, sec, sIdx));
+  });
+
+  // 添加分区按钮
+  app.appendChild(el('button', {
+    class: 'btn btn-secondary btn-lg',
+    style: { width: '100%', marginTop: '12px' },
+    onclick: () => {
+      b.sections.push({ title: `分区 ${b.sections.length + 1}`, preview: '', items: [], notes: '' });
+      render();
+    }
+  }, '＋ 新建分区'));
+
+  // 自由文字输入区（所有图片下方，导出时若为空则不显示）
+  const notesPanel = el('div', { class: 'editor-panel', style: { marginTop: '20px' } });
+  notesPanel.appendChild(el('div', { class: 'editor-row' },
+    el('label', {}, '备注'),
+    el('div', { style: { flex: 1 } },
+      el('textarea', {
+        style: { width: '100%', minHeight: '100px', padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '14px', fontFamily: 'inherit', resize: 'vertical' },
+        placeholder: '全局备注，显示在所有分区下方。留空则不显示，也不产生空白。',
+        oninput: e => b.notes = e.target.value,
+      }, b.notes || '')
+    )
+  ));
+  // 同步初始内容
+  notesPanel.querySelector('textarea').value = b.notes || '';
+  app.appendChild(notesPanel);
+}
+
+function renderSectionEditor(b, sec, sIdx) {
+  const card = el('div', { class: 'section-card' });
+
+  // 头部
+  const header = el('div', { class: 'section-header' });
+  const titleInput = el('input', { type: 'text', class: 'section-title-input', value: sec.title || '', placeholder: '分区名', oninput: e => sec.title = e.target.value });
+  header.appendChild(titleInput);
+  const preview = el('div', { class: 'section-preview', title: '点击上传分区预览图' });
+  if (sec.preview) preview.appendChild(el('img', { src: sec.preview }));
+  else preview.appendChild(document.createTextNode('预览'));
+  preview.onclick = () => uploadImage(dataUrl => { sec.preview = dataUrl; render(); });
+  header.appendChild(preview);
+  if (sec.preview) {
+    header.appendChild(el('button', { class: 'btn-icon btn-ghost', onclick: () => { sec.preview = ''; render(); } }, '🗑️'));
+  }
+  header.appendChild(el('button', { class: 'btn-icon btn-ghost', title: '上移', onclick: () => moveSection(b, sIdx, -1) }, '↑'));
+  header.appendChild(el('button', { class: 'btn-icon btn-ghost', title: '下移', onclick: () => moveSection(b, sIdx, 1) }, '↓'));
+  header.appendChild(el('button', { class: 'btn-icon btn-danger', title: '删除分区', onclick: async () => {
+    if (await customConfirm('删除此分区及其所有道具？')) {
+      b.sections.splice(sIdx, 1);
+      if (b.sections.length === 0) b.sections.push({ title: '分区 1', preview: '', items: [], notes: '' });
+      render();
+    }
+  } }, '✕'));
+  card.appendChild(header);
+
+  // 道具网格
+  const grid = el('div', { class: 'item-grid' });
+  (sec.items || []).forEach((item, iIdx) => {
+    const it = ITEMS_BY_ID[item.id];
+    if (!it) return;
+    const cell = el('div', { class: 'item-cell', title: it.nameZh + (it.nameEn ? ' / ' + it.nameEn : '') });
+    const icon = el('div', { class: 'item-icon' });
+    icon.appendChild(el('img', { src: it.image, loading: 'lazy' }));
+    cell.appendChild(icon);
+    const nameEl = el('div', { class: 'item-name' }, it.nameZh);
+    // 染色指示点
+    if (item.color && DYE_BY_ID[item.color]) {
+      nameEl.appendChild(el('span', { class: 'item-dye-indicator', style: { background: DYE_BY_ID[item.color].color }, title: '已染色: ' + DYE_BY_ID[item.color].name }));
+    }
+    cell.appendChild(nameEl);
+    if ((item.qty || 1) > 1) {
+      cell.appendChild(el('div', { class: 'item-qty' }, '×' + (item.qty || 1)));
+    }
+    // 染色按钮（左上角）
+    const dyeBtn = el('div', { class: 'item-dye' + (item.color ? ' dyed' : ''), title: item.color ? '已染色：' + (DYE_BY_ID[item.color]?.name || '') + '（点击修改）' : '染色' });
+    if (item.color && DYE_BY_ID[item.color]) {
+      const d = DYE_BY_ID[item.color];
+      dyeBtn.style.background = d.color;
+      // 浅色加边框增强对比
+      if (['white', 'beige', 'yellow', 'pink', 'lime', 'aquamarine'].includes(d.id)) {
+        dyeBtn.style.borderColor = 'rgba(0,0,0,0.35)';
+      }
+      // 右上角小×表示可清除
+      const clearMark = el('div', { class: 'item-dye-clear-x', onclick: e => { e.stopPropagation(); delete sec.items[iIdx].color; render(); }, title: '清除染色' }, '×');
+      dyeBtn.appendChild(clearMark);
+    } else {
+      dyeBtn.textContent = '🎨';
+    }
+    dyeBtn.onclick = e => { e.stopPropagation(); openDyePicker(b, sec, iIdx); };
+    cell.appendChild(dyeBtn);
+    const edit = el('div', { class: 'item-edit', onclick: e => { e.stopPropagation(); editItemQty(b, sec, iIdx); } }, '✎');
+    const remove = el('div', { class: 'item-remove', onclick: e => { e.stopPropagation(); sec.items.splice(iIdx, 1); render(); } }, '✕');
+    cell.appendChild(edit);
+    cell.appendChild(remove);
+    grid.appendChild(cell);
+  });
+  // 添加按钮
+  const addSlot = el('div', { class: 'item-cell' },
+    el('div', { class: 'item-add-slot', onclick: () => openPicker(sIdx) }, '＋')
+  );
+  grid.appendChild(addSlot);
+  card.appendChild(grid);
+  card.appendChild(el('div', { style: { textAlign: 'right', marginTop: '8px', fontSize: '12px', color: 'var(--text-light)' } }, `共 ${(sec.items || []).length} 件`));
+
+  // 分区备注
+  card.appendChild(el('div', { class: 'editor-row', style: { marginTop: '12px' } },
+    el('label', {}, '备注'),
+    el('div', { style: { flex: 1 } },
+      el('textarea', {
+        style: { width: '100%', minHeight: '60px', padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '14px', fontFamily: 'inherit', resize: 'vertical' },
+        placeholder: '此分区的备注（可选），留空则不显示',
+        oninput: e => sec.notes = e.target.value,
+      }, sec.notes || '')
+    )
+  ));
+  return card;
+}
+
+function moveSection(b, idx, dir) {
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= b.sections.length) return;
+  [b.sections[idx], b.sections[newIdx]] = [b.sections[newIdx], b.sections[idx]];
+  render();
+}
+
+// ===== 染色选择器 =====
+let _dyePickerContext = null; // {sectionIdx, itemIdx}
+function openDyePicker(b, sec, iIdx) {
+  // 找到 section 的全局索引（picker callback 需要）
+  const sIdx = (b.sections || []).indexOf(sec);
+  if (sIdx < 0) return;
+  _dyePickerContext = { sectionIdx: sIdx, itemIdx: iIdx };
+
+  const overlay = el('div', { class: 'dye-picker-overlay' });
+  const picker = el('div', { class: 'dye-picker' });
+  picker.appendChild(el('h3', {}, '🎨 选择染色颜色'));
+  picker.appendChild(el('div', { class: 'hint' }, '对应 Pokopia 游戏的 18 种彩色气球颜色'));
+  const grid = el('div', { class: 'dye-picker-grid' });
+  const currentColor = sec.items[iIdx]?.color;
+  DYE_COLORS.forEach(d => {
+    const cell = el('div', { class: 'dye-picker-cell' + (currentColor === d.id ? ' selected' : ''), title: d.name });
+    cell.style.background = d.color;
+    cell.appendChild(el('span', { class: 'name' }, d.name));
+    cell.onclick = () => {
+      const ctx = _dyePickerContext;
+      const target = state.draftBuild.sections[ctx.sectionIdx].items[ctx.itemIdx];
+      target.color = d.id;
+      overlay.remove();
+      render();
+      toast('已染色：' + d.name + ' 🎨');
+    };
+    grid.appendChild(cell);
+  });
+  picker.appendChild(grid);
+  const footer = el('div', { class: 'dye-picker-footer' });
+  const clearBtn = el('button', { class: 'btn btn-ghost', onclick: () => {
+    const ctx = _dyePickerContext;
+    const target = state.draftBuild.sections[ctx.sectionIdx].items[ctx.itemIdx];
+    delete target.color;
+    overlay.remove();
+    render();
+    toast('已清除染色');
+  } }, '✕ 清除染色');
+  const cancelBtn = el('button', { class: 'btn btn-secondary', onclick: () => overlay.remove() }, '取消');
+  footer.appendChild(clearBtn);
+  footer.appendChild(cancelBtn);
+  picker.appendChild(footer);
+  overlay.appendChild(picker);
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+  setTimeout(() => grid.focus(), 50);
+}
+
+function editItemQty(b, sec, iIdx) {
+  const it = sec.items[iIdx];
+  const newQty = prompt('数量（直接输入数字）', it.qty || 1);
+  if (newQty === null) return;
+  const n = parseInt(newQty) || 1;
+  sec.items[iIdx] = { ...it, qty: n };
+  render();
+}
+
+// ===== Picker =====
+function openPicker(sectionIdx) {
+  state.pickerTarget = sectionIdx;
+  // 填充分类下拉
+  const sel = $('#pickerCategory');
+  sel.innerHTML = '<option value="">全部分类</option>';
+  CATEGORY_ORDER.forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat;
+    opt.textContent = `${CATEGORY_ZH[cat]} (${ITEMS.filter(i => i.category === cat).length})`;
+    sel.appendChild(opt);
+  });
+  $('#pickerSearch').value = '';
+  renderPickerGrid();
+  $('#pickerModal').classList.add('open');
+  setTimeout(() => $('#pickerSearch').focus(), 100);
+}
+
+function renderPickerGrid() {
+  const q = $('#pickerSearch').value.trim().toLowerCase();
+  const cat = $('#pickerCategory').value;
+  let list = ITEMS;
+  if (cat) list = list.filter(i => i.category === cat);
+  if (q) list = list.filter(i => i.nameZh.toLowerCase().includes(q) || i.nameEn.toLowerCase().includes(q));
+  $('#pickerCount').textContent = `匹配 ${list.length} / ${ITEMS.length}`;
+  const grid = $('#pickerGrid');
+  grid.innerHTML = '';
+  if (list.length === 0) {
+    grid.appendChild(el('div', { class: 'picker-empty' }, '没有匹配的道具'));
+    return;
+  }
+  // 限 200 个以保证流畅
+  list.slice(0, 200).forEach(it => {
+    const cell = el('div', { class: 'picker-cell', title: it.nameZh + (it.nameEn ? ' / ' + it.nameEn : '') });
+    const icon = el('div', { class: 'picker-icon' });
+    icon.appendChild(el('img', { src: it.image, loading: 'lazy' }));
+    cell.appendChild(icon);
+    cell.appendChild(el('div', { class: 'picker-name' }, it.nameZh));
+    cell.onclick = () => {
+      const sec = state.draftBuild.sections[state.pickerTarget];
+      // 检查是否已存在
+      const exist = sec.items.find(x => x.id === it.id);
+      if (exist) {
+        exist.qty = (exist.qty || 1) + 1;
+      } else {
+        sec.items.push({ id: it.id, qty: 1 });
+      }
+      $('#pickerModal').classList.remove('open');
+      render();
+      toast('已加入：' + it.nameZh);
+    };
+    grid.appendChild(cell);
+  });
+  if (list.length > 200) {
+    grid.appendChild(el('div', { class: 'picker-empty', style: { gridColumn: '1/-1' } }, `仅显示前 200 个，请用搜索缩小范围（共 ${list.length} 条）`));
+  }
+}
+
+// Picker events
+$('#pickerClose').onclick = $('#pickerCancel').onclick = () => $('#pickerModal').classList.remove('open');
+$('#pickerSearch').oninput = renderPickerGrid;
+$('#pickerCategory').onchange = renderPickerGrid;
+$('#pickerModal').onclick = e => { if (e.target === $('#pickerModal')) $('#pickerModal').classList.remove('open'); };
+
+// ===== Image upload =====
+function uploadImage(cb) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    if (f.size > 5 * 1024 * 1024) { toast('图片超过 5MB'); return; }
+    const r = new FileReader();
+    r.onload = () => cb(r.result);
+    r.readAsDataURL(f);
+  };
+  input.click();
+}
+
+// ===== Viewer =====
+function renderViewer(app) {
+  const b = state.builds[state.currentBuildId];
+  if (!b) { navigate('home'); return; }
+
+  const viewer = el('div', { class: 'viewer' });
+  // 顶部 banner
+  const banner = el('div', { class: 'viewer-banner' });
+  const cover = el('div', { class: 'cover' });
+  if (b.cover) cover.appendChild(el('img', { src: b.cover }));
+  else cover.textContent = '🏠';
+  banner.appendChild(cover);
+  banner.appendChild(el('div', { class: 'title-block' },
+    el('h1', {}, (b.name || '未命名') + ' 材料单'),
+    el('div', { class: 'subtitle' }, 'pokopia 分享'),
+  ));
+  viewer.appendChild(banner);
+
+  // 分区
+  const body = el('div', { class: 'viewer-body' });
+  (b.sections || []).forEach((sec, idx) => {
+    if (idx > 0) body.appendChild(el('div', { class: 'viewer-section-divider' }));
+    const s = el('div', { class: 'viewer-section' });
+    const sh = el('div', { class: 'viewer-section-header' });
+    const prev = el('div', { class: 'viewer-section-preview' });
+    if (sec.preview) prev.appendChild(el('img', { src: sec.preview }));
+    else prev.textContent = '🏠';
+    sh.appendChild(prev);
+    sh.appendChild(el('div', { class: 'viewer-section-title' }, `[ ${sec.title || '未命名'} ]`));
+    s.appendChild(sh);
+    s.appendChild(renderMaterialGrid(sec.items || []));
+    // 分区备注（仅当有文字时显示）
+    if (sec.notes && sec.notes.trim()) {
+      s.appendChild(el('div', { class: 'viewer-section-notes' },
+        el('div', { class: 'viewer-notes-content' }, sec.notes.trim())
+      ));
+    }
+    body.appendChild(s);
+  });
+
+  // 自由文字备注区（仅当有文字时显示，空时完全隐藏）
+  if (b.notes && b.notes.trim()) {
+    body.appendChild(el('div', { class: 'viewer-notes' },
+      el('div', { class: 'viewer-notes-content' }, b.notes.trim())
+    ));
+  }
+
+  viewer.appendChild(body);
+
+  // 底部
+  const total = totalItems(b);
+  const pageSize = 60;
+  const pages = Math.max(1, Math.ceil(total / pageSize));
+  viewer.appendChild(el('div', { class: 'viewer-footer' },
+    el('div', { class: 'author' }, '@' + (b.author || 'anonymous')),
+    el('div', {}, `共 ${total} 件 · 1 / ${pages}`),
+  ));
+
+  app.appendChild(viewer);
+}
+
+function renderMaterialGrid(items) {
+  const grid = el('div', { class: 'item-grid' });
+  items.forEach(it => {
+    const meta = ITEMS_BY_ID[it.id];
+    if (!meta) return;
+    const cell = el('div', { class: 'item-cell' });
+    const icon = el('div', { class: 'item-icon' });
+    icon.appendChild(el('img', { src: meta.image, loading: 'lazy' }));
+    cell.appendChild(icon);
+    const nameEl = el('div', { class: 'item-name' }, meta.nameZh);
+    // 染色指示点（view 时显示）
+    if (it.color && DYE_BY_ID[it.color]) {
+      nameEl.appendChild(el('span', { class: 'item-dye-indicator', style: { background: DYE_BY_ID[it.color].color }, title: '已染色: ' + DYE_BY_ID[it.color].name }));
+    }
+    cell.appendChild(nameEl);
+    if ((it.qty || 1) > 1) {
+      cell.appendChild(el('div', { class: 'item-qty' }, '×' + (it.qty || 1)));
+    }
+    grid.appendChild(cell);
+  });
+  return grid;
+}
+
+// ===== Export: JSON =====
+function exportBuildJSON() {
+  const b = state.builds[state.currentBuildId];
+  if (!b) return;
+  const data = JSON.stringify(b, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (b.name || '材料单') + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('已导出 JSON ✓');
+}
+
+// ===== Export: Images (1600x2848, with template background) =====
+const EXPORT_W = 1600, EXPORT_H = 2848;
+
+function loadImg(src) {
+  return new Promise(resolve => {
+    if (!src) { resolve(null); return; }
+    const img = new Image();
+    if (!src.startsWith('data:')) img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+function drawImageContain(ctx, img, x, y, w, h) {
+  if (!img) return;
+  const ir = img.width / img.height, tr = w / h;
+  let dw, dh;
+  if (ir > tr) { dw = w; dh = w / ir; }
+  else { dh = h; dw = h * ir; }
+  ctx.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+}
+
+function drawWrappedText(ctx, text, x, y, maxW, lineH, maxLines) {
+  const chars = [...text];
+  let line = '', lineIdx = 0;
+  for (let i = 0; i < chars.length; i++) {
+    const test = line + chars[i];
+    if (ctx.measureText(test).width > maxW && line) {
+      ctx.fillText(line, x, y + lineIdx * lineH);
+      line = chars[i];
+      lineIdx++;
+      if (lineIdx >= maxLines - 1) {
+        while (line && ctx.measureText(line + '…').width > maxW) line = line.slice(0, -1);
+        ctx.fillText(line + '…', x, y + lineIdx * lineH);
+        return;
+      }
+    } else { line = test; }
+  }
+  if (line) ctx.fillText(line, x, y + lineIdx * lineH);
+}
+
+async function exportImages(build) {
+  if (!build) return;
+  toast('正在生成图片，请稍候…');
+
+  // === 1. 预加载所有图片：道具 + 封面/分区预览 + 背景附件 ===
+  const imgCache = {};
+  const tasks = [];
+  const seen = new Set();
+  (build.sections || []).forEach(sec => {
+    (sec.items || []).forEach(it => {
+      const meta = ITEMS_BY_ID[it.id];
+      if (meta && !seen.has(meta.image)) {
+        seen.add(meta.image);
+        tasks.push(loadImg(meta.image).then(img => { imgCache[meta.image] = img; }));
+      }
+    });
+  });
+  if (build.cover) tasks.push(loadImg(build.cover).then(img => { imgCache[build.cover] = img; }));
+  (build.sections || []).forEach(sec => {
+    if (sec.preview) tasks.push(loadImg(sec.preview).then(img => { imgCache[sec.preview] = img; }));
+  });
+  // 预加载背景附件
+  if (BG1) tasks.push(loadImg(BG1).then(img => { imgCache.__BG1 = img; }));
+  if (BG2) tasks.push(loadImg(BG2).then(img => { imgCache.__BG2 = img; }));
+  await Promise.all(tasks);
+
+  // === 2. 画布参数 ===
+  const PAD_X = 70;                  // 左右内边距
+  const CW = EXPORT_W - PAD_X * 2;   // 内容宽度 (1460)
+  const TITLE_BAR_H = 100;            // 顶部标题栏高度 (附件1的细长栏)
+  const TITLE_GAP = 40;               // 标题栏与主内容间距
+  const COLS = 5;                     // 列数调整到 5（图标更大需要）
+  const CELL_W = 270;
+  const CELL_GAP = (CW - COLS * CELL_W) / (COLS - 1);
+  const ICON_SIZE = 170;              // 图标尺寸 (原 200 -> 170，更紧凑)
+  const NAME_FONT = 26;               // 道具名字号 (与分区一致)
+  const NAME_LINE_H = 32;
+  const NAME_MAX_LINES = 2;
+  const QTY_FONT = 20;
+  const SEC_TITLE_FONT = 26;
+  const SECTION_GAP = 30;
+  const CELL_H = ICON_SIZE + 12 + NAME_LINE_H * NAME_MAX_LINES + 8;
+  const ROW_GAP = 28;
+  const ROW_H = CELL_H + ROW_GAP;
+  const SEC_HEADER_H = 90;            // 分区标题高（仅预览图+badge 风格，更紧凑）
+  const SEC_BADGE_H = 56;
+  // 每页内容可用区域高度 (附件1: ~1900, 附件2: ~2560)
+  const PG1_BODY_TOP = 760;           // 附件1 白色面板顶 + 内边距
+  const PG_NEXT_BODY_TOP = 110;       // 附件2 白色面板顶 + 内边距
+  const BODY_BOTTOM_PAD = 80;
+
+  // 预计算附件图的"白色面板"顶部和底部 Y 坐标，用于绘制内边距约束
+  // 附件1: 主面板 Y 720-2720
+  // 附件2: 主面板 Y 60-2720
+
+  // === 3. 分页渲染 ===
+  const pages = [];
+  let canvas, ctx, y, bodyTop;
+
+  function newPage(isFirstPage) {
+    if (canvas) pages.push(canvas);
+    canvas = document.createElement('canvas');
+    canvas.width = EXPORT_W;
+    canvas.height = EXPORT_H;
+    ctx = canvas.getContext('2d');
+    // 填充背景
+    ctx.fillStyle = '#fdf7f7';
+    ctx.fillRect(0, 0, EXPORT_W, EXPORT_H);
+    // 绘制附件背景 (覆盖整张)
+    const bg = isFirstPage ? imgCache.__BG1 : imgCache.__BG2;
+    if (bg) {
+      ctx.drawImage(bg, 0, 0, EXPORT_W, EXPORT_H);
+    }
+    bodyTop = isFirstPage ? PG1_BODY_TOP : PG_NEXT_BODY_TOP;
+    y = bodyTop;
+  }
+
+  function availH() {
+    return EXPORT_H - BODY_BOTTOM_PAD - y;
+  }
+
+  // 顶部标题栏 (附件1：在细长的紫色边框细条上绘标题文字)
+  function drawTitleBar() {
+    if (y + TITLE_BAR_H > bodyTop) {
+      // 已经在背景的标题栏区域内（仅附件1第一页），直接绘标题
+      ctx.fillStyle = '#7c5fb6';
+      ctx.font = `bold 36px "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'center';
+      ctx.fillText((build.name || '未命名') + ' 材料单', EXPORT_W / 2, 600);
+      // 不增加 y，由后续bodyTop接管
+      return false; // 不预留空间
+    }
+    // 自绘标题栏
+    const bx = PAD_X, by = y, bw = CW, bh = TITLE_BAR_H;
+    ctx.strokeStyle = '#7c5fb6';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(bx, by, bw, bh);
+    ctx.fillStyle = '#7c5fb6';
+    ctx.font = `bold 38px "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+    ctx.fillText((build.name || '未命名') + ' 材料单', bx + 24, by + bh / 2);
+    y += TITLE_BAR_H + TITLE_GAP;
+    return true;
+  }
+
+  function drawSectionHeader(sec) {
+    const sx = PAD_X, sy = y;
+    // 不再绘制分区预览图（缩小整体高度），改用纯 badge
+    const badgeText = '[ ' + (sec.title || '未命名') + ' ]';
+    ctx.font = `bold ${SEC_TITLE_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
+    const bw = ctx.measureText(badgeText).width + 40;
+    drawRoundedRect(ctx, sx, sy, bw, SEC_BADGE_H, 12);
+    ctx.fillStyle = '#7c5fb6';
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
+    ctx.fillText(badgeText, sx + bw / 2, sy + SEC_BADGE_H / 2);
+    y += SEC_HEADER_H + 8;
+  }
+
+  function drawItemCell(item, col) {
+    const meta = ITEMS_BY_ID[item.id];
+    if (!meta) return;
+    const cx = PAD_X + col * (CELL_W + CELL_GAP);
+    const cy = y;
+    // Cell bg（白色 + 紫色细边框）
+    ctx.fillStyle = '#fff';
+    drawRoundedRect(ctx, cx, cy, CELL_W, CELL_H, 12);
+    ctx.fill();
+    ctx.strokeStyle = '#ebe1f0';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    // Icon
+    const ix = cx + (CELL_W - ICON_SIZE) / 2;
+    const iy = cy + 8;
+    const iImg = imgCache[meta.image];
+    if (iImg) drawImageContain(ctx, iImg, ix, iy, ICON_SIZE, ICON_SIZE);
+    // Name（与分区字号一致：26px）—— 居中绘制，追踪最后一行位置以在末尾放染色点
+    ctx.fillStyle = '#2c2138';
+    ctx.font = `${NAME_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.textBaseline = 'top';
+    ctx.textAlign = 'center';
+    const nameStartY = iy + ICON_SIZE + 8;
+    const chars = [...meta.nameZh];
+    let line = '', lineIdx = 0;
+    let lastLineText = '', lastLineY = nameStartY;
+    for (let i = 0; i < chars.length; i++) {
+      const test = line + chars[i];
+      if (ctx.measureText(test).width > CELL_W - 16 && line) {
+        ctx.fillText(line, cx + CELL_W / 2, nameStartY + lineIdx * NAME_LINE_H);
+        line = chars[i];
+        lineIdx++;
+        if (lineIdx >= NAME_MAX_LINES - 1) {
+          while (line && ctx.measureText(line + '…').width > CELL_W - 16) line = line.slice(0, -1);
+          lastLineText = line + '…';
+          lastLineY = nameStartY + lineIdx * NAME_LINE_H;
+          ctx.fillText(lastLineText, cx + CELL_W / 2, lastLineY);
+          line = '';
+          break;
+        }
+      } else { line = test; }
+    }
+    if (line) {
+      lastLineText = line;
+      lastLineY = nameStartY + lineIdx * NAME_LINE_H;
+      ctx.fillText(line, cx + CELL_W / 2, lastLineY);
+    }
+    // 染色点：在名字最后一行后面（贴边防溢出）
+    if (item.color && DYE_BY_ID[item.color]) {
+      const dColor = DYE_BY_ID[item.color].color;
+      const dotR = 10;
+      const lastLineW = ctx.measureText(lastLineText).width;
+      const lastLineEndX = cx + CELL_W / 2 + lastLineW / 2;
+      let dotX = lastLineEndX + dotR + 5;
+      // 防止溢出 cell 右边
+      if (dotX + dotR > cx + CELL_W - 4) dotX = cx + CELL_W - dotR - 4;
+      const dotY = lastLineY + NAME_LINE_H / 2;
+      ctx.fillStyle = dColor;
+      ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(dotX, dotY, dotR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+    // Qty（×N 显著加大）
+    const qty = item.qty || 1;
+    if (qty > 1) {
+      ctx.fillStyle = '#7c5fb6';
+      ctx.font = `bold ${QTY_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.fillText('×' + qty, cx + CELL_W - 12, cy + 12);
+    }
+  }
+
+  // 文字备注绘制（通用，用于分区备注和全局备注）
+  function drawNotes(text, opts = {}) {
+    const { isContinuation = false } = opts;
+    const trimmed = (text || '').trim();
+    if (!trimmed) return;
+    const bottomY = EXPORT_H - BODY_BOTTOM_PAD;
+    // 计算高度
+    ctx.font = `${NAME_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
+    const maxW = CW - 60;
+    const chars = [...trimmed];
+    const lines = [];
+    let line = '';
+    for (const ch of chars) {
+      const test = line + ch;
+      if (ctx.measureText(test).width > maxW && line) {
+        lines.push(line);
+        line = ch;
+        if (lines.length >= 14) break; // 限制最大行数
+      } else { line = test; }
+    }
+    if (line) lines.push(line);
+    const notesH = 24 + lines.length * 36 + 24;
+    // 检查是否需要换页
+    if (bottomY - y < notesH + 30) {
+      newPage(false);
+      // 留出顶部说明
+      ctx.fillStyle = '#7c5fb6';
+      ctx.font = `bold 24px "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.textBaseline = 'top';
+      ctx.textAlign = 'left';
+      ctx.fillText(isContinuation ? '备注（续）' : '备注', PAD_X, y);
+      y += 40;
+    }
+    // 绘制备注框
+    const nx = PAD_X, ny = y;
+    const nh = 24 + lines.length * 36 + 24;
+    ctx.fillStyle = '#fff';
+    drawRoundedRect(ctx, nx, ny, CW, nh, 12);
+    ctx.fill();
+    // 左边紫色描边
+    ctx.fillStyle = '#7c5fb6';
+    ctx.fillRect(nx, ny, 6, nh);
+    // 文字
+    ctx.fillStyle = '#2c2138';
+    ctx.font = `${NAME_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.textBaseline = 'top';
+    ctx.textAlign = 'left';
+    let ty = ny + 20;
+    for (const ln of lines) {
+      ctx.fillText(ln, nx + 24, ty);
+      ty += 36;
+    }
+    y = ny + nh + 10;
+  }
+
+  // 工具：圆角矩形（不被外部覆盖，避免暴露）
+  function drawRoundedRect(ctx2, x, y2, w, h, r) {
+    ctx2.beginPath();
+    ctx2.moveTo(x + r, y2);
+    ctx2.arcTo(x + w, y2, x + w, y2 + h, r);
+    ctx2.arcTo(x + w, y2 + h, x, y2 + h, r);
+    ctx2.arcTo(x, y2 + h, x, y2, r);
+    ctx2.arcTo(x, y2, x + w, y2, r);
+    ctx2.closePath();
+  }
+
+  // === 开始渲染 ===
+  newPage(true);
+
+  // 顶部标题绘制在附件1的"紫色边框标题栏"内左对齐
+  // 实测附件1标题栏：Y 450-550 (中心 500)，X 38-1545 (宽 1507)
+  const titleY = 500;
+  const titleBg = { x: PAD_X, y: titleY - 55, w: CW, h: 110 };
+  // 浅色背景框（提升对比度），半透明白色
+  ctx.fillStyle = 'rgba(255,255,255,0.92)';
+  drawRoundedRect(ctx, titleBg.x, titleBg.y, titleBg.w, titleBg.h, 12);
+  ctx.fill();
+  // 左边紫色描边
+  ctx.fillStyle = '#7c5fb6';
+  ctx.fillRect(titleBg.x, titleBg.y, 8, titleBg.h);
+  // 标题文字：左对齐 + 垂直居中于框
+  ctx.fillStyle = '#7c5fb6';
+  ctx.font = `bold 48px "PingFang SC", "Microsoft YaHei", sans-serif`;
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'left';
+  ctx.fillText((build.name || '未命名') + ' 材料单', titleBg.x + 36, titleY);
+
+  // 绘制分区
+  function renderSection(sec) {
+    const items = sec.items || [];
+    if (items.length === 0) return;
+    // 检查空间：分区头部 + 至少 1 行
+    if (availH() < SEC_HEADER_H + ROW_H) {
+      newPage(false);
+    }
+    drawSectionHeader(sec);
+    // 渲染道具
+    for (let i = 0; i < items.length; i++) {
+      const col = i % COLS;
+      if (col === 0 && i > 0) y += ROW_H;
+      if (y + CELL_H > EXPORT_H - BODY_BOTTOM_PAD) {
+        newPage(false);
+        drawSectionHeader({ title: (sec.title || '未命名') + '（续）', preview: sec.preview });
+        // 当前 i 位置需要重新放置
+        const newCol = i % COLS;
+        if (newCol > 0) y -= ROW_H; // 撤销上面 col===0 的 ROW_H
+        continue; // 让下一次循环正常算 col
+      }
+      drawItemCell(items[i], col);
+    }
+    y += ROW_H;
+    // 分区备注
+    drawNotes(sec.notes, { isContinuation: false });
+  }
+
+  for (let sIdx = 0; sIdx < (build.sections || []).length; sIdx++) {
+    renderSection(build.sections[sIdx]);
+  }
+
+  // 绘制全局备注（在所有分区后）
+  drawNotes(build.notes, { isContinuation: false });
+
+  // 收尾
+  if (canvas) pages.push(canvas);
+
+  // === 每页左下角：作者纯色块 + 名字 ===
+  if (build.author && build.author.trim()) {
+    const authorText = '@' + build.author.trim();
+    pages.forEach(cv => {
+      const cctx = cv.getContext('2d');
+      cctx.save();
+      cctx.font = `bold 30px "PingFang SC", "Microsoft YaHei", sans-serif`;
+      const tw = cctx.measureText(authorText).width;
+      const bw = tw + 56, bh = 56;
+      const bx = PAD_X;
+      const by = EXPORT_H - bh - 20;
+      // 纯色块
+      cctx.fillStyle = '#ff8a3d';
+      drawRoundedRect(cctx, bx, by, bw, bh, 14);
+      cctx.fill();
+      // 名字（白色粗体，居中显示在色块上）
+      cctx.fillStyle = '#fff';
+      cctx.textAlign = 'center';
+      cctx.textBaseline = 'middle';
+      cctx.fillText(authorText, bx + bw / 2, by + bh / 2 + 1);
+      cctx.restore();
+    });
+  }
+
+  // === 4. 下载 ===
+  for (let i = 0; i < pages.length; i++) {
+    const dataUrl = pages[i].toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = (build.name || '材料单') + '_' + (i + 1) + '.png';
+    a.click();
+    await new Promise(r => setTimeout(r, 400));
+  }
+  toast('已导出 ' + pages.length + ' 张图片 ✓');
+}
+
+// ===== Init =====
+render();
+</script>
+</body>
+</html>
