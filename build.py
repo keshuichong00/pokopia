@@ -16,6 +16,10 @@ bg2_b64 = (base / "bg2.b64").read_text().strip()
 result = result.replace("/*#__INLINE_BG1__*/''", '"data:image/jpeg;base64,' + bg1_b64 + '"')
 result = result.replace("/*#__INLINE_BG2__*/''", '"data:image/jpeg;base64,' + bg2_b64 + '"')
 
+# 注入 logo (data:image/png;base64,XXX)
+logo_b64 = (base / "logo.b64").read_text().strip()
+result = result.replace("/*#__INLINE_LOGO__*/''", '"data:image/png;base64,' + logo_b64 + '"')
+
 out = base / "index.html"
 out.write_text(result, encoding="utf-8")
 print(f"✓ 生成: {out}")

@@ -786,6 +786,8 @@ const ITEMS_RAW = /*#__INLINE_ITEMS__*/null;
 // 导出图片背景附件 (附件1: 第一张; 附件2: 第二张及续页)
 const BG1 = /*#__INLINE_BG1__*/'';
 const BG2 = /*#__INLINE_BG2__*/'';
+// Pokemon Pokopia 游戏 logo (叠加在封面图左上角)
+const LOGO = /*#__INLINE_LOGO__*/'';
 
 const CATEGORY_ZH = {
   'Buildings': '建筑', 'Furniture': '家具', 'Utilities': '功能',
@@ -1910,6 +1912,8 @@ async function exportImages(build) {
   // 预加载背景附件
   if (BG1) tasks.push(loadImg(BG1).then(img => { imgCache.__BG1 = img; }));
   if (BG2) tasks.push(loadImg(BG2).then(img => { imgCache.__BG2 = img; }));
+  // 预加载 logo
+  if (LOGO) tasks.push(loadImg(LOGO).then(img => { imgCache.__LOGO = img; }));
   await Promise.all(tasks);
 
   // === 2. 画布参数 ===
@@ -2194,6 +2198,20 @@ async function exportImages(build) {
     ctx.lineWidth = 3;
     drawRoundedRect(ctx, cx, cy, cw, ch, 12);
     ctx.stroke();
+  }
+
+  // Pokemon Pokopia logo：固定画在原 bg1 logo 的位置 (x31-248, y26-170)
+  // 覆盖被封面遮挡的原 logo；不跟封面走，独立绝对定位
+  if (imgCache.__LOGO) {
+    const lg = imgCache.__LOGO;
+    const boxX = 31, boxY = 26, boxW = 218, boxH = 145;
+    // contain 模式：保持宽高比，居中填入 box
+    const s = Math.min(boxW / lg.width, boxH / lg.height);
+    const dw = Math.round(lg.width * s);
+    const dh = Math.round(lg.height * s);
+    const dx = boxX + Math.round((boxW - dw) / 2);
+    const dy = boxY + Math.round((boxH - dh) / 2);
+    ctx.drawImage(lg, dx, dy, dw, dh);
   }
 
   // 顶部标题绘制在附件1的"紫色边框标题栏"内左对齐
