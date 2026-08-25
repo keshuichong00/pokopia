@@ -273,11 +273,12 @@
   .section-card {
     background: var(--card);
     border: 1px solid var(--border);
+    border-top: 2px dashed #c4b5e6;       /* 分区之间虚线分割（导出虚线的弱化版） */
     border-radius: var(--radius);
-    padding: 16px;
-    margin-bottom: 12px;
+    padding: 18px;
+    margin-bottom: 28px;
   }
-  .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .section-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
   .section-title-input {
     flex: 1;
     font-size: 16px; font-weight: 600;
@@ -288,7 +289,7 @@
   }
   .section-title-input:focus { outline: none; border-color: var(--primary); background: white; }
   .section-preview {
-    width: 60px; height: 60px;
+    width: 140px; height: 93px;            /* 3:2 比例，与导出预览图比例一致 */
     background: var(--primary-light);
     border-radius: var(--radius-sm);
     display: flex; align-items: center; justify-content: center;
