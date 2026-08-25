@@ -1921,11 +1921,11 @@ async function exportImages(build) {
   const CELL_W = 270;
   const CELL_GAP = (CW - COLS * CELL_W) / (COLS - 1);
   const ICON_SIZE = 170;              // 图标尺寸 (原 200 -> 170，更紧凑)
-  const NAME_FONT = 26;               // 道具名字号 (与分区一致)
-  const NAME_LINE_H = 32;
+  const NAME_FONT = 28;               // 道具名字号 (放大2号)
+  const NAME_LINE_H = 34;
   const NAME_MAX_LINES = 2;
-  const QTY_FONT = 20;
-  const SEC_TITLE_FONT = 26;
+  const QTY_FONT = 22;
+  const SEC_TITLE_FONT = 28;
   const SECTION_GAP = 30;
   const CELL_H = ICON_SIZE + 12 + NAME_LINE_H * NAME_MAX_LINES + 8;
   const ROW_GAP = 28;
@@ -1995,17 +1995,37 @@ async function exportImages(build) {
 
   function drawSectionHeader(sec) {
     const sx = PAD_X, sy = y;
-    // 不再绘制分区预览图（缩小整体高度），改用纯 badge
+    // 分区预览图（如果有）在分区文字左边
+    let badgeX = sx;
+    if (sec.preview && imgCache[sec.preview]) {
+      const pvImg = imgCache[sec.preview];
+      const pvSize = SEC_HEADER_H + 4;           // 预览图略大于标题高
+      // 阴影 + 圆角裁切 + 紫色边框
+      ctx.save();
+      drawRoundedRect(ctx, sx, sy, pvSize, pvSize, 12);
+      ctx.clip();
+      drawImageContain(ctx, pvImg, sx, sy, pvSize, pvSize);
+      ctx.restore();
+      ctx.strokeStyle = '#7c5fb6';
+      ctx.lineWidth = 3;
+      drawRoundedRect(ctx, sx, sy, pvSize, pvSize, 12);
+      ctx.stroke();
+      badgeX = sx + pvSize + 16;
+    }
     const badgeText = '[ ' + (sec.title || '未命名') + ' ]';
     ctx.font = `bold ${SEC_TITLE_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
     const bw = ctx.measureText(badgeText).width + 40;
-    drawRoundedRect(ctx, sx, sy, bw, SEC_BADGE_H, 12);
+    // 垂直居中于预览图
+    const badgeY = sec.preview && imgCache[sec.preview]
+      ? sy + (SEC_HEADER_H + 4 - SEC_BADGE_H) / 2
+      : sy;
+    drawRoundedRect(ctx, badgeX, badgeY, bw, SEC_BADGE_H, 12);
     ctx.fillStyle = '#7c5fb6';
     ctx.fill();
     ctx.fillStyle = '#fff';
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'center';
-    ctx.fillText(badgeText, sx + bw / 2, sy + SEC_BADGE_H / 2);
+    ctx.fillText(badgeText, badgeX + bw / 2, badgeY + SEC_BADGE_H / 2);
     y += SEC_HEADER_H + 8;
   }
 
@@ -2151,6 +2171,30 @@ async function exportImages(build) {
 
   // === 开始渲染 ===
   newPage(true);
+
+  // 封面图（第一页上方，标题栏之上）
+  if (build.cover && imgCache[build.cover]) {
+    const cv = imgCache[build.cover];
+    const maxW = 480;        // 封面最大宽
+    const maxH = 320;        // 封面最大高（在标题栏 445 之上）
+    let cw = cv.width, ch = cv.height;
+    const scale = Math.min(maxW / cw, maxH / ch);
+    cw = Math.round(cw * scale);
+    ch = Math.round(ch * scale);
+    const cx = PAD_X;                    // 左对齐内容区
+    const cy = 80;                       // 顶部边距
+    // 阴影
+    ctx.fillStyle = 'rgba(124,95,182,0.18)';
+    drawRoundedRect(ctx, cx + 4, cy + 4, cw, ch, 12);
+    ctx.fill();
+    // 图片
+    drawImageContain(ctx, cv, cx, cy, cw, ch);
+    // 紫色细边框
+    ctx.strokeStyle = '#7c5fb6';
+    ctx.lineWidth = 3;
+    drawRoundedRect(ctx, cx, cy, cw, ch, 12);
+    ctx.stroke();
+  }
 
   // 顶部标题绘制在附件1的"紫色边框标题栏"内左对齐
   // 实测附件1标题栏：Y 450-550 (中心 500)，X 38-1545 (宽 1507)
