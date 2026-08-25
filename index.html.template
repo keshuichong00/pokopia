@@ -1988,7 +1988,7 @@ async function exportImages(build) {
   const NAME_MAX_LINES = 2;
   const QTY_FONT = 26;
   const SEC_TITLE_FONT = 38;
-  const SECTION_GAP = 80;              // 分区间距（方案B：60→80，虚线两侧各半）
+  const SECTION_GAP = 120;             // 分区间距（虚线两侧各半）
   const CELL_H = ICON_SIZE + 12 + NAME_LINE_H * NAME_MAX_LINES + 8;
   const ROW_GAP = 40;                 // 行间距（方案B：28→40）
   const ROW_H = CELL_H + ROW_GAP;
@@ -2348,7 +2348,7 @@ async function exportImages(build) {
     // 分区头实际高度（自由分区也可能带多张预览图）
     const hh = calcSecHeaderLayout(sec).pvH;
     // Reserve space: image height + some padding
-    const totalNeeded = hh + imgH + 56;
+    const totalNeeded = hh + imgH + 42;
     if (totalNeeded > availH()) {
       newPage(false);
     }
@@ -2356,11 +2356,11 @@ async function exportImages(build) {
     // Draw image
     const img = imgCache[fp.image];
     if (img) {
-      drawImageContain(ctx, img, imgX, y + hh + 24, imgW, imgH);
+      drawImageContain(ctx, img, imgX, y + hh + 10, imgW, imgH);
     } else {
       // Placeholder
       ctx.fillStyle = '#f0e8f4';
-      drawRoundedRect(ctx, imgX, y + hh + 24, imgW, imgH, 12);
+      drawRoundedRect(ctx, imgX, y + hh + 10, imgW, imgH, 12);
       ctx.fill();
       ctx.strokeStyle = '#7c5fb6';
       ctx.lineWidth = 2;
@@ -2371,7 +2371,7 @@ async function exportImages(build) {
     const markerFont = 22;
     (sec.markers || []).forEach((mk, mkIdx) => {
       const mx = imgX + Math.round(imgW * mk.rx);
-      const my = (y + hh + 24) + Math.round(imgH * mk.ry);
+      const my = (y + hh + 10) + Math.round(imgH * mk.ry);
       // Numbered circle (purple bg, white text, white border)
       ctx.fillStyle = '#7c5fb6';
       ctx.beginPath();
