@@ -1029,7 +1029,7 @@ function editBuild(id) {
 function saveDraft() {
   const b = state.draftBuild;
   if (!b) return;
-  if (!b.name?.trim()) { toast('请填写材料单名称'); return; }
+  if (!b.name?.trim()) { toast('请填写说明'); return; }
   b.updatedAt = Date.now();
   state.builds[b.id] = b;
   saveBuilds(state.builds);
@@ -1077,7 +1077,7 @@ function renderEditor(app) {
   // 基本信息面板
   const infoPanel = el('div', { class: 'editor-panel' });
   infoPanel.appendChild(el('div', { class: 'editor-row' },
-    el('label', {}, '名称'),
+    el('label', {}, '说明'),
     el('input', { type: 'text', value: b.name || '', oninput: e => b.name = e.target.value, placeholder: '如：露营车' }),
   ));
   infoPanel.appendChild(el('div', { class: 'editor-row' },
@@ -1343,6 +1343,10 @@ function renderFreePageEditor(b, sec, sIdx) {
   if (sec.freePage) {
     // Re-render: image + markers on stage
     const fp = sec.freePage;
+    // 修复旧数据：强制按原图宽高比矫正（曾因拖拽变形保存的 h）
+    if (fp.imgW && fp.imgH && fp.w) {
+      fp.h = fp.w * (fp.imgH / fp.imgW);
+    }
     // Fixed stage width 800px (matches viewer)
     const STAGE_W = 800;
     const stageH = Math.round(STAGE_W * (fp.y + fp.h) / 100 + 40);
@@ -1387,14 +1391,19 @@ function renderFreePageEditor(b, sec, sIdx) {
     const onMove = e => {
       if (!dragMode) return;
       const rect = stage.getBoundingClientRect();
+      // x/y/w/h 均以 stage 宽度为基准的百分比，dx/dy 统一除以宽度
       const dx = (e.clientX - dragStart.x) / rect.width * 100;
-      const dy = (e.clientY - dragStart.y) / rect.height * 100;
+      const dy = (e.clientY - dragStart.y) / rect.width * 100;
       if (dragMode === 'move') {
         fp.x = Math.max(0, Math.min(100 - fp.w, dragStart.fpX + dx));
         fp.y = Math.max(0, Math.min(100 - fp.h, dragStart.fpY + dy));
       } else if (dragMode === 'resize') {
-        fp.w = Math.max(10, Math.min(100 - fp.x, dragStart.fpW + dx));
-        fp.h = Math.max(10, Math.min(100 - fp.y, dragStart.fpH + dy * (fp.imgH / fp.imgW)));
+        // 锁定宽高比：以横向拖动为准，h 始终 = w * (imgH/imgW)
+        let nw = Math.max(10, Math.min(100 - fp.x, dragStart.fpW + dx));
+        let nh = nw * (fp.imgH / fp.imgW);
+        if (fp.y + nh > 100) { nh = 100 - fp.y; nw = nh * (fp.imgW / fp.imgH); }
+        fp.w = nw;
+        fp.h = nh;
       }
       // Re-render entirely (simpler than partial update)
       render();
@@ -1752,6 +1761,10 @@ function renderFreePageViewer(sec) {
 
   if (sec.freePage) {
     const fp = sec.freePage;
+    // 修复旧数据：强制按原图宽高比矫正
+    if (fp.imgW && fp.imgH && fp.w) {
+      fp.h = fp.w * (fp.imgH / fp.imgW);
+    }
     // Stage: fixed width 800px, height computed from image aspect
     const STAGE_W = 800;
     const aspectH = STAGE_W * (fp.imgH / fp.imgW); // natural image height when scaled to STAGE_W
@@ -2169,7 +2182,7 @@ async function exportImages(build) {
     // 渲染道具
     for (let i = 0; i < items.length; i++) {
       const col = i % COLS;
-      if (realCol === 0 && i > 0) y += ROW_H;
+      if (col === 0 && i > 0) y += ROW_H;
       if (y + CELL_H > EXPORT_H - BODY_BOTTOM_PAD) {
         newPage(false);
         drawSectionHeader({ title: (sec.title || '未命名') + '（续）', preview: sec.preview });
