@@ -1979,18 +1979,18 @@ async function exportImages(build) {
   const CW = EXPORT_W - PAD_X * 2;   // 内容宽度 (1460)
   const TITLE_BAR_H = 100;            // 顶部标题栏高度 (附件1的细长栏)
   const TITLE_GAP = 40;               // 标题栏与主内容间距
-  const COLS = 5;                     // 列数调整到 5（图标更大需要）
-  const CELL_W = 270;
+  const COLS = 5;                     // 列数保持 5（方案B：密度保留）
+  const CELL_W = 250;                 // 方案B：270→250，卡片间隙 27.5→52.5
   const CELL_GAP = (CW - COLS * CELL_W) / (COLS - 1);
-  const ICON_SIZE = 170;              // 图标尺寸 (原 200 -> 170，更紧凑)
+  const ICON_SIZE = 160;              // 图标尺寸（方案B：170→160）
   const NAME_FONT = 36;               // 道具名字号
   const NAME_LINE_H = 42;
   const NAME_MAX_LINES = 2;
   const QTY_FONT = 26;
   const SEC_TITLE_FONT = 38;
-  const SECTION_GAP = 60;              // 分区间距（虚线两侧各半）
+  const SECTION_GAP = 80;              // 分区间距（方案B：60→80，虚线两侧各半）
   const CELL_H = ICON_SIZE + 12 + NAME_LINE_H * NAME_MAX_LINES + 8;
-  const ROW_GAP = 28;
+  const ROW_GAP = 40;                 // 行间距（方案B：28→40）
   const ROW_H = CELL_H + ROW_GAP;
   const SEC_HEADER_H = 90;            // 分区标题高（仅预览图+badge 风格，更紧凑）
   const SEC_BADGE_H = 56;
@@ -2102,7 +2102,7 @@ async function exportImages(build) {
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'center';
     ctx.fillText(lay.badgeText, badgeX + bw / 2, badgeY + SEC_BADGE_H / 2);
-    y += (lay.previews.length ? lay.pvH : SEC_HEADER_H) + 8;
+    y += (lay.previews.length ? lay.pvH : SEC_HEADER_H) + 24;   // 预览图与首行道具间距 8→24
   }
 
   function drawItemCell(item, col) {
@@ -2348,7 +2348,7 @@ async function exportImages(build) {
     // 分区头实际高度（自由分区也可能带多张预览图）
     const hh = calcSecHeaderLayout(sec).pvH;
     // Reserve space: image height + some padding
-    const totalNeeded = hh + imgH + 40;
+    const totalNeeded = hh + imgH + 56;
     if (totalNeeded > availH()) {
       newPage(false);
     }
@@ -2356,11 +2356,11 @@ async function exportImages(build) {
     // Draw image
     const img = imgCache[fp.image];
     if (img) {
-      drawImageContain(ctx, img, imgX, y + hh + 8, imgW, imgH);
+      drawImageContain(ctx, img, imgX, y + hh + 24, imgW, imgH);
     } else {
       // Placeholder
       ctx.fillStyle = '#f0e8f4';
-      drawRoundedRect(ctx, imgX, y + hh + 8, imgW, imgH, 12);
+      drawRoundedRect(ctx, imgX, y + hh + 24, imgW, imgH, 12);
       ctx.fill();
       ctx.strokeStyle = '#7c5fb6';
       ctx.lineWidth = 2;
@@ -2371,7 +2371,7 @@ async function exportImages(build) {
     const markerFont = 22;
     (sec.markers || []).forEach((mk, mkIdx) => {
       const mx = imgX + Math.round(imgW * mk.rx);
-      const my = (y + hh + 8) + Math.round(imgH * mk.ry);
+      const my = (y + hh + 24) + Math.round(imgH * mk.ry);
       // Numbered circle (purple bg, white text, white border)
       ctx.fillStyle = '#7c5fb6';
       ctx.beginPath();
@@ -2386,7 +2386,7 @@ async function exportImages(build) {
       ctx.textBaseline = 'middle';
       ctx.fillText(String(mkIdx + 1), mx, my);
     });
-    y += hh + imgH + 16;
+    y += hh + imgH + 32;
     // Marker notes (text list below image)
     if ((sec.markers || []).length > 0) {
       const noteItems = (sec.markers || []).map((mk, i) => ({
