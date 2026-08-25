@@ -364,217 +364,6 @@
   }
   .item-cell .item-add-slot:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
 
-  /* ===== Free Page (自由页面) ===== */
-  .free-section-controls {
-    display: flex; gap: 8px; margin-bottom: 12px;
-    flex-wrap: wrap;
-  }
-  .free-stage {
-    position: relative;
-    width: 100%;
-    max-width: 900px;
-    margin: 0 auto;
-    background: repeating-linear-gradient(45deg, #f0e8f4, #f0e8f4 10px, #f7f1fa 10px, #f7f1fa 20px);
-    border: 2px dashed var(--primary);
-    border-radius: 8px;
-    overflow: hidden;
-    user-select: none;
-  }
-  .free-stage.empty {
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    color: var(--primary);
-    font-size: 16px;
-    padding: 60px 20px;
-    text-align: center;
-  }
-  .free-stage.empty:hover { background: var(--primary-light); }
-  .free-image {
-    position: absolute;
-    cursor: move;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-    border: 2px solid var(--primary);
-    background: white;
-  }
-  .free-image img {
-    width: 100%; height: 100%;
-    pointer-events: none;
-    display: block;
-  }
-  .free-resize-handle {
-    position: absolute;
-    width: 14px; height: 14px;
-    background: var(--primary);
-    border: 2px solid white;
-    border-radius: 50%;
-    cursor: nwse-resize;
-    z-index: 10;
-  }
-  .free-resize-handle.br { right: -7px; bottom: -7px; }
-  .free-marker {
-    position: absolute;
-    width: 32px; height: 32px;
-    background: var(--primary);
-    color: white;
-    border: 3px solid white;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14px; font-weight: 700;
-    cursor: pointer;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    z-index: 5;
-  }
-  .free-marker:hover { transform: translate(-50%, -50%) scale(1.15); }
-  .free-marker.selected { background: #e91e63; }
-  .free-marker-hint {
-    position: absolute;
-    bottom: 8px; left: 8px;
-    background: rgba(124, 95, 182, 0.9);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    pointer-events: none;
-    z-index: 1;
-  }
-  .free-markers-list {
-    margin-top: 16px;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-  .free-marker-item {
-    display: flex; gap: 10px; align-items: flex-start;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px;
-  }
-  .free-marker-item .num {
-    flex-shrink: 0;
-    width: 32px; height: 32px;
-    background: var(--primary);
-    color: white;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700;
-    margin-top: 2px;
-  }
-  .free-marker-item textarea {
-    flex: 1;
-    border: none;
-    background: transparent;
-    resize: vertical;
-    min-height: 36px;
-    font-size: 14px;
-    font-family: inherit;
-    padding: 6px;
-  }
-  .free-marker-item textarea:focus { outline: 1px solid var(--primary); border-radius: 4px; }
-  .free-marker-item .del {
-    flex-shrink: 0;
-    width: 28px; height: 28px;
-    background: transparent;
-    border: none;
-    color: #c44;
-    cursor: pointer;
-    font-size: 18px;
-    border-radius: 4px;
-  }
-  .free-marker-item .del:hover { background: #fee; }
-  .free-section-type-badge {
-    display: inline-block;
-    background: var(--primary);
-    color: white;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    margin-left: 8px;
-    font-weight: 500;
-  }
-  .add-section-dropdown {
-    position: relative;
-    margin-top: 12px;
-  }
-  .add-section-dropdown .menu {
-    position: absolute;
-    bottom: 100%;
-    left: 0; right: 0;
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    margin-bottom: 4px;
-    z-index: 10;
-    overflow: hidden;
-  }
-  .add-section-dropdown .menu button {
-    width: 100%;
-    padding: 12px 16px;
-    background: white;
-    border: none;
-    border-bottom: 1px solid var(--border);
-    text-align: left;
-    font-size: 14px;
-    cursor: pointer;
-  }
-  .add-section-dropdown .menu button:last-child { border-bottom: none; }
-  .add-section-dropdown .menu button:hover { background: var(--primary-light); }
-
-  /* Free page viewer */
-  .viewer-free-stage {
-    position: relative;
-    width: 100%;
-    max-width: 800px;
-    margin: 16px auto;
-    background: #f7f1fa;
-    border-radius: 8px;
-    overflow: hidden;
-  }
-  .viewer-free-image {
-    position: absolute;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-    border: 2px solid var(--primary);
-  }
-  .viewer-free-image img { width: 100%; height: 100%; display: block; }
-  .viewer-free-marker {
-    position: absolute;
-    width: 30px; height: 30px;
-    background: var(--primary);
-    color: white;
-    border: 2px solid white;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 13px; font-weight: 700;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-  }
-  .viewer-free-notes {
-    max-width: 800px;
-    margin: 16px auto;
-    display: grid;
-    gap: 10px;
-  }
-  .viewer-free-note-item {
-    display: flex; gap: 10px; align-items: flex-start;
-    padding: 10px;
-    background: #faf5fc;
-    border-left: 4px solid var(--primary);
-    border-radius: 4px;
-  }
-  .viewer-free-note-item .num {
-    flex-shrink: 0;
-    width: 28px; height: 28px;
-    background: var(--primary);
-    color: white;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700;
-    font-size: 13px;
-  }
-  .viewer-free-note-item .text { flex: 1; line-height: 1.6; white-space: pre-wrap; }
-
   /* ===== Item Picker Modal ===== */
   .modal-overlay {
     position: fixed; inset: 0;
@@ -1102,50 +891,18 @@ function renderEditor(app) {
 
   // 分区列表
   (b.sections || []).forEach((sec, sIdx) => {
-    if (sec.type === 'free') {
-      app.appendChild(renderFreePageEditor(b, sec, sIdx));
-    } else {
-      app.appendChild(renderSectionEditor(b, sec, sIdx));
-    }
+    app.appendChild(renderSectionEditor(b, sec, sIdx));
   });
 
-  // 添加分区按钮（下拉选择普通/自由）
-  const dropdown = el('div', { class: 'add-section-dropdown' });
-  const addBtn = el('button', {
+  // 添加分区按钮
+  app.appendChild(el('button', {
     class: 'btn btn-secondary btn-lg',
-    style: { width: '100%' },
-    onclick: e => {
-      e.stopPropagation();
-      const existing = document.querySelector('.add-section-menu');
-      if (existing) { existing.remove(); return; }
-      const menu = el('div', { class: 'add-section-menu menu', onclick: e => e.stopPropagation() });
-      menu.appendChild(el('button', {
-        onclick: () => {
-          b.sections.push({ title: `分区 ${b.sections.length + 1}`, preview: '', items: [], notes: '' });
-          menu.remove();
-          render();
-        }
-      }, '📦 新建普通分区（道具列表）'));
-      menu.appendChild(el('button', {
-        onclick: () => {
-          b.sections.push({
-            title: `自由页面 ${(b.sections.filter(s => s.type === 'free').length || 0) + 1}`,
-            type: 'free',
-            freePage: null,
-            markers: [],
-            notes: ''
-          });
-          menu.remove();
-          render();
-        }
-      }, '✏️ 新建自由页面（图片+标记）'));
-      addBtn.parentElement.appendChild(menu);
-      const closeOnClick = () => { menu.remove(); document.removeEventListener('click', closeOnClick); };
-      setTimeout(() => document.addEventListener('click', closeOnClick), 0);
+    style: { width: '100%', marginTop: '12px' },
+    onclick: () => {
+      b.sections.push({ title: `分区 ${b.sections.length + 1}`, preview: '', items: [], notes: '' });
+      render();
     }
-  }, '＋ 新建分区 ▾');
-  dropdown.appendChild(addBtn);
-  app.appendChild(dropdown);
+  }, '＋ 新建分区'));
 
   // 自由文字输入区（所有图片下方，导出时若为空则不显示）
   const notesPanel = el('div', { class: 'editor-panel', style: { marginTop: '20px' } });
@@ -1258,261 +1015,6 @@ function moveSection(b, idx, dir) {
   if (newIdx < 0 || newIdx >= b.sections.length) return;
   [b.sections[idx], b.sections[newIdx]] = [b.sections[newIdx], b.sections[idx]];
   render();
-}
-
-// ===== Free Page Editor =====
-function renderFreePageEditor(b, sec, sIdx) {
-  const card = el('div', { class: 'section-card' });
-  // Header (similar to normal section, but with type badge)
-  const header = el('div', { class: 'section-header' });
-  const titleInput = el('input', { type: 'text', class: 'section-title-input', value: sec.title || '', placeholder: '自由页面名', oninput: e => sec.title = e.target.value });
-  header.appendChild(titleInput);
-  const badge = el('span', { class: 'free-section-type-badge' }, '✏️ 自由页面');
-  header.appendChild(badge);
-  header.appendChild(el('button', { class: 'btn-icon btn-ghost', title: '上移', onclick: () => moveSection(b, sIdx, -1) }, '↑'));
-  header.appendChild(el('button', { class: 'btn-icon btn-ghost', title: '下移', onclick: () => moveSection(b, sIdx, 1) }, '↓'));
-  header.appendChild(el('button', { class: 'btn-icon btn-danger', title: '删除分区', onclick: async () => {
-    if (await customConfirm('删除此自由页面？')) {
-      b.sections.splice(sIdx, 1);
-      if (b.sections.length === 0) b.sections.push({ title: '分区 1', preview: '', items: [], notes: '' });
-      render();
-    }
-  } }, '✕'));
-  card.appendChild(header);
-
-  // Stage
-  const stage = el('div', { class: 'free-stage' + (sec.freePage ? '' : ' empty') });
-  // Set aspect ratio based on image
-  if (sec.freePage) {
-    // Compute stage aspect: maintain image aspect, but allow some default if no image
-    stage.style.paddingBottom = '0';
-  }
-
-  if (!sec.freePage) {
-    stage.appendChild(el('div', {}, '📷 点击上传图片\n（支持自由拖动、缩放、打标记）'));
-    stage.onclick = () => {
-      uploadImage(dataUrl => {
-        const img = new Image();
-        img.onload = () => {
-          sec.freePage = {
-            image: dataUrl,
-            imgW: img.naturalWidth,
-            imgH: img.naturalHeight,
-            // Default: image occupies 80% of stage, centered
-            x: 10, y: 10, w: 80, h: 80 * (img.naturalHeight / img.naturalWidth),
-          };
-          render();
-        };
-        img.src = dataUrl;
-      });
-    };
-  } else {
-    // Image element
-    const fp = sec.freePage;
-    const imgEl = el('div', { class: 'free-image' });
-    imgEl.style.left = fp.x + '%';
-    imgEl.style.top = fp.y + '%';
-    imgEl.style.width = fp.w + '%';
-    imgEl.style.height = fp.h + '%';
-    imgEl.appendChild(el('img', { src: fp.image, alt: '自由页面' }));
-    // Markers (drawn relative to stage)
-    (sec.markers || []).forEach((mk, mkIdx) => {
-      const marker = el('div', { class: 'free-marker' }, String(mkIdx + 1));
-      marker.style.left = mk.rx * 100 + '%';
-      marker.style.top = mk.ry * 100 + '%';
-      marker.title = mk.note || '点击查看/编辑说明';
-      marker.onclick = e => {
-        e.stopPropagation();
-        // Focus textarea for this marker
-        const list = card.querySelector('.free-markers-list');
-        if (list) {
-          const tas = list.querySelectorAll('textarea');
-          if (tas[mkIdx]) tas[mkIdx].focus();
-        }
-      };
-      imgEl.appendChild(marker); // attach to image so it moves with it
-    });
-    // Wait - markers should be relative to image, not stage. Let's recalculate
-    // Actually if markers are relative to image bounds, when image moves, markers move with it
-    // Image bounds in stage: x to x+w, y to y+h
-    // Marker position in stage: x + rx*w, y + ry*h
-    // So I need to place markers on stage, not on image element
-    // Let me restructure: clear image of markers, add to stage
-  }
-
-  if (sec.freePage) {
-    // Re-render: image + markers on stage
-    const fp = sec.freePage;
-    // Fixed stage width 800px (matches viewer)
-    const STAGE_W = 800;
-    const stageH = Math.round(STAGE_W * (fp.y + fp.h) / 100 + 40);
-    stage.style.width = STAGE_W + 'px';
-    stage.style.maxWidth = '100%';
-    stage.style.height = stageH + 'px';
-    const imgEl = el('div', { class: 'free-image' });
-    const imgLeftPx = fp.x / 100 * STAGE_W;
-    const imgTopPx = fp.y / 100 * STAGE_W;
-    const imgWidthPx = fp.w / 100 * STAGE_W;
-    const imgHeightPx = fp.h / 100 * STAGE_W;
-    imgEl.style.left = imgLeftPx + 'px';
-    imgEl.style.top = imgTopPx + 'px';
-    imgEl.style.width = imgWidthPx + 'px';
-    imgEl.style.height = imgHeightPx + 'px';
-    imgEl.appendChild(el('img', { src: fp.image, alt: '自由页面' }));
-    // Resize handle
-    const handle = el('div', { class: 'free-resize-handle br' });
-    imgEl.appendChild(handle);
-    stage.appendChild(imgEl);
-
-    // Markers on stage (positioned using image bounds)
-    (sec.markers || []).forEach((mk, mkIdx) => {
-      const marker = el('div', { class: 'free-marker' }, String(mkIdx + 1));
-      marker.style.left = (imgLeftPx + mk.rx * imgWidthPx) + 'px';
-      marker.style.top = (imgTopPx + mk.ry * imgHeightPx) + 'px';
-      marker.title = mk.note || '点击编辑说明';
-      marker.onclick = e => {
-        e.stopPropagation();
-        const tas = card.querySelectorAll('.free-marker-item textarea');
-        if (tas[mkIdx]) tas[mkIdx].focus();
-      };
-      stage.appendChild(marker);
-    });
-
-    // Hint at bottom
-    stage.appendChild(el('div', { class: 'free-marker-hint' }, '点击图片添加标记 · 拖动图片改变位置 · 拖右下角改变大小'));
-
-    // === Drag to move image ===
-    let dragMode = null; // 'move' | 'resize' | null
-    let dragStart = null;
-    const onMove = e => {
-      if (!dragMode) return;
-      const rect = stage.getBoundingClientRect();
-      const dx = (e.clientX - dragStart.x) / rect.width * 100;
-      const dy = (e.clientY - dragStart.y) / rect.height * 100;
-      if (dragMode === 'move') {
-        fp.x = Math.max(0, Math.min(100 - fp.w, dragStart.fpX + dx));
-        fp.y = Math.max(0, Math.min(100 - fp.h, dragStart.fpY + dy));
-      } else if (dragMode === 'resize') {
-        fp.w = Math.max(10, Math.min(100 - fp.x, dragStart.fpW + dx));
-        fp.h = Math.max(10, Math.min(100 - fp.y, dragStart.fpH + dy * (fp.imgH / fp.imgW)));
-      }
-      // Re-render entirely (simpler than partial update)
-      render();
-    };
-    const onUp = () => { dragMode = null; document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
-    imgEl.addEventListener('mousedown', e => {
-      if (e.target === handle) return;
-      dragMode = 'move';
-      dragStart = { x: e.clientX, y: e.clientY, fpX: fp.x, fpY: fp.y, fpW: fp.w, fpH: fp.h };
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
-      e.preventDefault();
-    });
-    handle.addEventListener('mousedown', e => {
-      dragMode = 'resize';
-      dragStart = { x: e.clientX, y: e.clientY, fpX: fp.x, fpY: fp.y, fpW: fp.w, fpH: fp.h };
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
-      e.preventDefault();
-      e.stopPropagation();
-    });
-
-    // === Click to add marker ===
-    stage.addEventListener('click', e => {
-      // Ignore clicks on existing markers, resize handle
-      if (e.target.classList.contains('free-marker') || 
-          e.target.classList.contains('free-resize-handle')) return;
-      // Get click position relative to stage
-      const rect = stage.getBoundingClientRect();
-      const clickX = (e.clientX - rect.left) / rect.width;
-      const clickY = (e.clientY - rect.top) / rect.height;
-      // Check if click is within image bounds (in 0-1 range)
-      const imgX1 = fp.x / 100, imgY1 = fp.y / 100;
-      const imgX2 = (fp.x + fp.w) / 100, imgY2 = (fp.y + fp.h) / 100;
-      if (clickX < imgX1 || clickX > imgX2 || clickY < imgY1 || clickY > imgY2) return;
-      // Compute rx, ry relative to image
-      const rx = (clickX - imgX1) / (imgX2 - imgX1);
-      const ry = (clickY - imgY1) / (imgY2 - imgY1);
-      sec.markers = sec.markers || [];
-      sec.markers.push({ rx, ry, note: '' });
-      render();
-      // Focus the new marker's textarea after re-render
-      setTimeout(() => {
-        const tas = document.querySelectorAll('.free-marker-item textarea');
-        if (tas[sec.markers.length - 1]) tas[sec.markers.length - 1].focus();
-      }, 100);
-    });
-  }
-
-  card.appendChild(stage);
-
-  // Controls below stage
-  if (sec.freePage) {
-    const controls = el('div', { class: 'free-section-controls' });
-    controls.appendChild(el('button', {
-      class: 'btn btn-sm btn-secondary',
-      onclick: () => {
-        uploadImage(dataUrl => {
-          const img = new Image();
-          img.onload = () => {
-            sec.freePage = { image: dataUrl, imgW: img.naturalWidth, imgH: img.naturalHeight, x: 10, y: 10, w: 80, h: 80 * (img.naturalHeight / img.naturalWidth) };
-            sec.markers = [];
-            render();
-          };
-          img.src = dataUrl;
-        });
-      }
-    }, '🔄 更换图片'));
-    controls.appendChild(el('button', {
-      class: 'btn btn-sm btn-ghost',
-      onclick: () => {
-        if (sec.freePage) {
-          sec.freePage = null;
-          sec.markers = [];
-          render();
-        }
-      }
-    }, '🗑️ 移除图片'));
-    card.appendChild(controls);
-  }
-
-  // Marker notes list
-  if (sec.freePage && (sec.markers || []).length > 0) {
-    const list = el('div', { class: 'free-markers-list' });
-    (sec.markers || []).forEach((mk, mkIdx) => {
-      const item = el('div', { class: 'free-marker-item' });
-      item.appendChild(el('div', { class: 'num' }, String(mkIdx + 1)));
-      const ta = el('textarea', {
-        placeholder: '针对此标记的说明文字...',
-        oninput: e => mk.note = e.target.value,
-      });
-      ta.value = mk.note || '';
-      item.appendChild(ta);
-      item.appendChild(el('button', {
-        class: 'del',
-        title: '删除标记',
-        onclick: () => {
-          sec.markers.splice(mkIdx, 1);
-          render();
-        }
-      }, '×'));
-      list.appendChild(item);
-    });
-    card.appendChild(list);
-  }
-
-  // 分区备注（自由页面也支持）
-  card.appendChild(el('div', { class: 'editor-row', style: { marginTop: '12px' } },
-    el('label', {}, '备注'),
-    el('div', { style: { flex: 1 } },
-      el('textarea', {
-        style: { width: '100%', minHeight: '60px', padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '14px', fontFamily: 'inherit', resize: 'vertical' },
-        placeholder: '此自由页面的备注（可选）',
-        oninput: e => sec.notes = e.target.value,
-      }, sec.notes || '')
-    )
-  ));
-  return card;
 }
 
 // ===== 染色选择器 =====
@@ -1674,26 +1176,22 @@ function renderViewer(app) {
   const body = el('div', { class: 'viewer-body' });
   (b.sections || []).forEach((sec, idx) => {
     if (idx > 0) body.appendChild(el('div', { class: 'viewer-section-divider' }));
-    if (sec.type === 'free') {
-      body.appendChild(renderFreePageViewer(sec));
-    } else {
-      const s = el('div', { class: 'viewer-section' });
-      const sh = el('div', { class: 'viewer-section-header' });
-      const prev = el('div', { class: 'viewer-section-preview' });
-      if (sec.preview) prev.appendChild(el('img', { src: sec.preview }));
-      else prev.textContent = '🏠';
-      sh.appendChild(prev);
-      sh.appendChild(el('div', { class: 'viewer-section-title' }, `[ ${sec.title || '未命名'} ]`));
-      s.appendChild(sh);
-      s.appendChild(renderMaterialGrid(sec.items || []));
-      // 分区备注（仅当有文字时显示）
-      if (sec.notes && sec.notes.trim()) {
-        s.appendChild(el('div', { class: 'viewer-section-notes' },
-          el('div', { class: 'viewer-notes-content' }, sec.notes.trim())
-        ));
-      }
-      body.appendChild(s);
+    const s = el('div', { class: 'viewer-section' });
+    const sh = el('div', { class: 'viewer-section-header' });
+    const prev = el('div', { class: 'viewer-section-preview' });
+    if (sec.preview) prev.appendChild(el('img', { src: sec.preview }));
+    else prev.textContent = '🏠';
+    sh.appendChild(prev);
+    sh.appendChild(el('div', { class: 'viewer-section-title' }, `[ ${sec.title || '未命名'} ]`));
+    s.appendChild(sh);
+    s.appendChild(renderMaterialGrid(sec.items || []));
+    // 分区备注（仅当有文字时显示）
+    if (sec.notes && sec.notes.trim()) {
+      s.appendChild(el('div', { class: 'viewer-section-notes' },
+        el('div', { class: 'viewer-notes-content' }, sec.notes.trim())
+      ));
     }
+    body.appendChild(s);
   });
 
   // 自由文字备注区（仅当有文字时显示，空时完全隐藏）
@@ -1738,77 +1236,6 @@ function renderMaterialGrid(items) {
     grid.appendChild(cell);
   });
   return grid;
-}
-
-// Viewer: Free page (read-only display)
-function renderFreePageViewer(sec) {
-  const s = el('div', { class: 'viewer-section viewer-free-section' });
-  const sh = el('div', { class: 'viewer-section-header' });
-  const prev = el('div', { class: 'viewer-section-preview' });
-  prev.textContent = '✏️';
-  sh.appendChild(prev);
-  sh.appendChild(el('div', { class: 'viewer-section-title' }, `[ ${sec.title || '未命名'} ]`));
-  s.appendChild(sh);
-
-  if (sec.freePage) {
-    const fp = sec.freePage;
-    // Stage: fixed width 800px, height computed from image aspect
-    const STAGE_W = 800;
-    const aspectH = STAGE_W * (fp.imgH / fp.imgW); // natural image height when scaled to STAGE_W
-    // Stage height = y% + h% of stage width
-    // We'll size stage = STAGE_W wide, height = (y+h)% of STAGE_W
-    // But image is in % of stage, so its pixel size is fp.w% * STAGE_W = 0.8 * 800 = 640
-    // Hmm, easier: just use a stage whose height matches the image's max bounds
-    const stageH = STAGE_W * (fp.y + fp.h) / 100 + 40; // +40 padding
-    const stage = el('div', { class: 'viewer-free-stage' });
-    stage.style.width = STAGE_W + 'px';
-    stage.style.height = stageH + 'px';
-    stage.style.maxWidth = '100%';
-    // Image: position in % of stage, but stage is STAGE_W wide so 1% = 8px
-    const imgEl = el('div', { class: 'viewer-free-image' });
-    imgEl.style.left = (fp.x / 100 * STAGE_W) + 'px';
-    imgEl.style.top = (fp.y / 100 * STAGE_W) + 'px';
-    imgEl.style.width = (fp.w / 100 * STAGE_W) + 'px';
-    imgEl.style.height = (fp.h / 100 * STAGE_W) + 'px';
-    imgEl.appendChild(el('img', { src: fp.image, alt: '自由页面' }));
-    stage.appendChild(imgEl);
-    // Markers: absolute pixel positions
-    const imgLeftPx = fp.x / 100 * STAGE_W;
-    const imgTopPx = fp.y / 100 * STAGE_W;
-    const imgWidthPx = fp.w / 100 * STAGE_W;
-    const imgHeightPx = fp.h / 100 * STAGE_W;
-    (sec.markers || []).forEach((mk, mkIdx) => {
-      const m = el('div', { class: 'viewer-free-marker' }, String(mkIdx + 1));
-      m.style.left = (imgLeftPx + mk.rx * imgWidthPx) + 'px';
-      m.style.top = (imgTopPx + mk.ry * imgHeightPx) + 'px';
-      m.style.transform = 'translate(-50%, -50%)';
-      m.title = mk.note || '';
-      stage.appendChild(m);
-    });
-    s.appendChild(stage);
-    // Marker notes list
-    const notes = (sec.markers || []).filter(mk => mk.note && mk.note.trim());
-    if (notes.length > 0) {
-      const list = el('div', { class: 'viewer-free-notes' });
-      (sec.markers || []).forEach((mk, mkIdx) => {
-        if (!mk.note || !mk.note.trim()) return;
-        const item = el('div', { class: 'viewer-free-note-item' });
-        item.appendChild(el('div', { class: 'num' }, String(mkIdx + 1)));
-        item.appendChild(el('div', { class: 'text' }, mk.note.trim()));
-        list.appendChild(item);
-      });
-      s.appendChild(list);
-    }
-  } else {
-    s.appendChild(el('div', { style: { padding: '20px', textAlign: 'center', color: 'var(--text-light)' } }, '（暂无图片）'));
-  }
-
-  if (sec.notes && sec.notes.trim()) {
-    s.appendChild(el('div', { class: 'viewer-section-notes' },
-      el('div', { class: 'viewer-notes-content' }, sec.notes.trim())
-    ));
-  }
-  return s;
 }
 
 // ===== Export: JSON =====
@@ -1888,11 +1315,6 @@ async function exportImages(build) {
   if (build.cover) tasks.push(loadImg(build.cover).then(img => { imgCache[build.cover] = img; }));
   (build.sections || []).forEach(sec => {
     if (sec.preview) tasks.push(loadImg(sec.preview).then(img => { imgCache[sec.preview] = img; }));
-    // 预加载自由页面图片
-    if (sec.freePage && sec.freePage.image) {
-      const fpImg = sec.freePage.image;
-      tasks.push(loadImg(fpImg).then(img => { imgCache[fpImg] = img; }));
-    }
   });
   // 预加载背景附件
   if (BG1) tasks.push(loadImg(BG1).then(img => { imgCache.__BG1 = img; }));
@@ -2169,7 +1591,7 @@ async function exportImages(build) {
     // 渲染道具
     for (let i = 0; i < items.length; i++) {
       const col = i % COLS;
-      if (realCol === 0 && i > 0) y += ROW_H;
+      if (col === 0 && i > 0) y += ROW_H;
       if (y + CELL_H > EXPORT_H - BODY_BOTTOM_PAD) {
         newPage(false);
         drawSectionHeader({ title: (sec.title || '未命名') + '（续）', preview: sec.preview });
@@ -2185,138 +1607,8 @@ async function exportImages(build) {
     drawNotes(sec.notes, { isContinuation: false });
   }
 
-  // Render free page section on canvas
-  function renderFreePage(sec) {
-    if (!sec.freePage) return;
-    // Reserve section header + image + marker list
-    // Compute image display size based on canvas width
-    const stageW = CW; // 1460
-    const fp = sec.freePage;
-    // Image occupies fp.w% of stageW horizontally
-    const imgW = Math.round(stageW * fp.w / 100);
-    const imgH = Math.round(imgW * (fp.imgH / fp.imgW));
-    const imgX = PAD_X + Math.round(stageW * fp.x / 100);
-    const imgY = y;
-    // Reserve space: image height + some padding
-    const totalNeeded = SEC_HEADER_H + imgH + 40;
-    if (totalNeeded > availH()) {
-      newPage(false);
-    }
-    drawSectionHeader(sec);
-    // Draw image
-    const img = imgCache[fp.image];
-    if (img) {
-      drawImageContain(ctx, img, imgX, y + SEC_HEADER_H + 8, imgW, imgH);
-    } else {
-      // Placeholder
-      ctx.fillStyle = '#f0e8f4';
-      drawRoundedRect(ctx, imgX, y + SEC_HEADER_H + 8, imgW, imgH, 12);
-      ctx.fill();
-      ctx.strokeStyle = '#7c5fb6';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-    // Draw markers
-    const markerR = 18;
-    const markerFont = 22;
-    (sec.markers || []).forEach((mk, mkIdx) => {
-      const mx = imgX + Math.round(imgW * mk.rx);
-      const my = (y + SEC_HEADER_H + 8) + Math.round(imgH * mk.ry);
-      // Numbered circle (purple bg, white text, white border)
-      ctx.fillStyle = '#7c5fb6';
-      ctx.beginPath();
-      ctx.arc(mx, my, markerR, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 3;
-      ctx.stroke();
-      ctx.fillStyle = '#fff';
-      ctx.font = `bold ${markerFont}px "PingFang SC", "Microsoft YaHei", sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(String(mkIdx + 1), mx, my);
-    });
-    y += SEC_HEADER_H + imgH + 16;
-    // Marker notes (text list below image)
-    if ((sec.markers || []).length > 0) {
-      const noteItems = (sec.markers || []).map((mk, i) => ({
-        num: i + 1,
-        text: (mk.note || '').trim(),
-      })).filter(it => it.text);
-      if (noteItems.length > 0) {
-        ctx.font = `${NAME_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
-        const maxW = CW - 100;
-        // Compute total height needed
-        const itemHeights = noteItems.map(it => {
-          const chars = [...it.text];
-          let line = '', lines = 0;
-          for (const ch of chars) {
-            const test = line + ch;
-            if (ctx.measureText(test).width > maxW - 80 && line) {
-              lines++;
-              line = ch;
-            } else { line = test; }
-          }
-          if (line) lines++;
-          return Math.max(1, lines) * 36 + 16;
-        });
-        const totalH = itemHeights.reduce((a, b) => a + b, 0) + 20;
-        if (y + totalH > EXPORT_H - BODY_BOTTOM_PAD) {
-          newPage(false);
-        }
-        // Draw list box
-        const nx = PAD_X, ny = y;
-        ctx.fillStyle = '#faf5fc';
-        drawRoundedRect(ctx, nx, ny, CW, totalH, 12);
-        ctx.fill();
-        ctx.fillStyle = '#7c5fb6';
-        ctx.fillRect(nx, ny, 6, totalH);
-        // Items
-        let cy = ny + 16;
-        noteItems.forEach((it, i) => {
-          const itemH = itemHeights[i];
-          // Number circle
-          ctx.fillStyle = '#7c5fb6';
-          ctx.beginPath();
-          ctx.arc(nx + 32, cy + 16, 14, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = '#fff';
-          ctx.font = `bold 18px "PingFang SC", "Microsoft YaHei", sans-serif`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(String(it.num), nx + 32, cy + 16);
-          // Text
-          ctx.fillStyle = '#2c2138';
-          ctx.font = `${NAME_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
-          ctx.textAlign = 'left';
-          ctx.textBaseline = 'top';
-          const chars = [...it.text];
-          let line = '', lineY = cy + 6;
-          for (const ch of chars) {
-            const test = line + ch;
-            if (ctx.measureText(test).width > maxW - 80 && line) {
-              ctx.fillText(line, nx + 64, lineY);
-              lineY += 36;
-              line = ch;
-            } else { line = test; }
-          }
-          if (line) ctx.fillText(line, nx + 64, lineY);
-          cy += itemH;
-        });
-        y = ny + totalH + 12;
-      }
-    }
-    // Section notes
-    drawNotes(sec.notes, { isContinuation: false });
-  }
-
   for (let sIdx = 0; sIdx < (build.sections || []).length; sIdx++) {
-    const sec = build.sections[sIdx];
-    if (sec.type === 'free') {
-      renderFreePage(sec);
-    } else {
-      renderSection(sec);
-    }
+    renderSection(build.sections[sIdx]);
   }
 
   // 绘制全局备注（在所有分区后）
