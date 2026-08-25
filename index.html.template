@@ -1925,19 +1925,19 @@ async function exportImages(build) {
   const CELL_W = 270;
   const CELL_GAP = (CW - COLS * CELL_W) / (COLS - 1);
   const ICON_SIZE = 170;              // 图标尺寸 (原 200 -> 170，更紧凑)
-  const NAME_FONT = 32;               // 道具名字号
-  const NAME_LINE_H = 38;
+  const NAME_FONT = 36;               // 道具名字号
+  const NAME_LINE_H = 42;
   const NAME_MAX_LINES = 2;
-  const QTY_FONT = 24;
-  const SEC_TITLE_FONT = 32;
-  const SECTION_GAP = 30;
+  const QTY_FONT = 26;
+  const SEC_TITLE_FONT = 38;
+  const SECTION_GAP = 60;              // 分区间距（虚线两侧各半）
   const CELL_H = ICON_SIZE + 12 + NAME_LINE_H * NAME_MAX_LINES + 8;
   const ROW_GAP = 28;
   const ROW_H = CELL_H + ROW_GAP;
   const SEC_HEADER_H = 90;            // 分区标题高（仅预览图+badge 风格，更紧凑）
   const SEC_BADGE_H = 56;
   // 每页内容可用区域高度 (附件1: ~1900, 附件2: ~2560)
-  const PG1_BODY_TOP = 760;           // 附件1 白色面板顶 + 内边距
+  const PG1_BODY_TOP = 660;           // 附件1 白色面板顶 + 内边距（缩小与标题栏间距）
   const PG_NEXT_BODY_TOP = 110;       // 附件2 白色面板顶 + 内边距
   const BODY_BOTTOM_PAD = 80;
 
@@ -1999,29 +1999,27 @@ async function exportImages(build) {
 
   function drawSectionHeader(sec) {
     const sx = PAD_X, sy = y;
-    // 分区预览图（如果有）在分区文字左边
+    // 分区预览图（如果有）在分区文字左边，参考样式：放大、无边框、文案水平居中对齐
+    const hasPreview = sec.preview && imgCache[sec.preview];
     let badgeX = sx;
-    if (sec.preview && imgCache[sec.preview]) {
+    if (hasPreview) {
       const pvImg = imgCache[sec.preview];
-      const pvSize = SEC_HEADER_H + 4;           // 预览图略大于标题高
-      // 阴影 + 圆角裁切 + 紫色边框
+      const pvW = 400;                  // 等比放大：宽 400
+      const pvH = 260;                  // 高 260 (3:2)
+      // 圆角裁切（无边框）
       ctx.save();
-      drawRoundedRect(ctx, sx, sy, pvSize, pvSize, 12);
+      drawRoundedRect(ctx, sx, sy, pvW, pvH, 8);
       ctx.clip();
-      drawImageContain(ctx, pvImg, sx, sy, pvSize, pvSize);
+      drawImageContain(ctx, pvImg, sx, sy, pvW, pvH);
       ctx.restore();
-      ctx.strokeStyle = '#7c5fb6';
-      ctx.lineWidth = 3;
-      drawRoundedRect(ctx, sx, sy, pvSize, pvSize, 12);
-      ctx.stroke();
-      badgeX = sx + pvSize + 16;
+      badgeX = sx + pvW + 16;
     }
     const badgeText = '[ ' + (sec.title || '未命名') + ' ]';
     ctx.font = `bold ${SEC_TITLE_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
     const bw = ctx.measureText(badgeText).width + 40;
-    // 垂直居中于预览图
-    const badgeY = sec.preview && imgCache[sec.preview]
-      ? sy + (SEC_HEADER_H + 4 - SEC_BADGE_H) / 2
+    // 分区文字和图片水平居中对齐
+    const badgeY = hasPreview
+      ? sy + Math.round((260 - SEC_BADGE_H) / 2)
       : sy;
     drawRoundedRect(ctx, badgeX, badgeY, bw, SEC_BADGE_H, 12);
     ctx.fillStyle = '#7c5fb6';
@@ -2030,7 +2028,7 @@ async function exportImages(build) {
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'center';
     ctx.fillText(badgeText, badgeX + bw / 2, badgeY + SEC_BADGE_H / 2);
-    y += SEC_HEADER_H + 8;
+    y += (hasPreview ? 260 : SEC_HEADER_H) + 8;
   }
 
   function drawItemCell(item, col) {
@@ -2177,17 +2175,17 @@ async function exportImages(build) {
   newPage(true);
 
   // 封面图（第一页上方，标题栏之上）
+  // logo 占右侧 → 封面距背景左边约 120px
   if (build.cover && imgCache[build.cover]) {
     const cv = imgCache[build.cover];
-    // logo 占左侧 (x31-420, y26-260) → 封面从 x=440 开始避免遮挡
-    const maxW = 480;
-    const maxH = 320;
+    const maxW = 560;
+    const maxH = 350;
     let cw = cv.width, ch = cv.height;
     const scale = Math.min(maxW / cw, maxH / ch);
     cw = Math.round(cw * scale);
     ch = Math.round(ch * scale);
-    const cx = 440;                      // 让出 logo 区域
-    const cy = 80;                       // 顶部边距
+    const cx = 120;                      // 距背景左边约 120px
+    const cy = 50;
     // 阴影
     ctx.fillStyle = 'rgba(124,95,182,0.18)';
     drawRoundedRect(ctx, cx + 4, cy + 4, cw, ch, 12);
@@ -2201,17 +2199,17 @@ async function exportImages(build) {
     ctx.stroke();
   }
 
-  // Pokemon Pokopia logo：固定画在原 bg1 logo 的位置 (x31-419, y26-259)
-  // 覆盖被封面遮挡的原 logo；不跟封面走，独立绝对定位
+  // Pokemon Pokopia logo：放大，下移保证完整性，与封面有重叠
+  // logo.png 尺寸 261x192
   if (imgCache.__LOGO) {
     const lg = imgCache.__LOGO;
-    const boxX = 31, boxY = 26, boxW = 389, boxH = 234;
-    // contain 模式：保持宽高比，居中填入 box
-    const s = Math.min(boxW / lg.width, boxH / lg.height);
-    const dw = Math.round(lg.width * s);
-    const dh = Math.round(lg.height * s);
-    const dx = boxX + Math.round((boxW - dw) / 2);
-    const dy = boxY + Math.round((boxH - dh) / 2);
+    const scale = 1.15;
+    const dw = Math.round(lg.width * scale);
+    const dh = Math.round(lg.height * scale);
+    const centerX = 200;
+    const centerY = Math.round(dh / 2) + 4;  // 下移，保证 logo 完整可见 (dy≈4)
+    const dx = centerX - Math.round(dw / 2);
+    const dy = centerY - Math.round(dh / 2);
     ctx.drawImage(lg, dx, dy, dw, dh);
   }
 
@@ -2386,13 +2384,35 @@ async function exportImages(build) {
     drawNotes(sec.notes, { isContinuation: false });
   }
 
+  let prevRendered = false;
   for (let sIdx = 0; sIdx < (build.sections || []).length; sIdx++) {
     const sec = build.sections[sIdx];
+    const willRender = sec.type === 'free' ? !!sec.freePage : (sec.items || []).length > 0;
+    // 分区之间：扩大间距 + 虚线分割线
+    if (prevRendered && willRender) {
+      y += Math.round(SECTION_GAP / 2);
+      // 若剩余空间不足以放 分割线+下一分区头，则先翻页（虚线不画在页尾）
+      if (y + SECTION_GAP + SEC_HEADER_H > EXPORT_H - BODY_BOTTOM_PAD) {
+        newPage(false);
+      } else {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(124,95,182,0.5)';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([24, 16]);
+        ctx.beginPath();
+        ctx.moveTo(PAD_X, y);
+        ctx.lineTo(EXPORT_W - PAD_X, y);
+        ctx.stroke();
+        ctx.restore();
+        y += Math.round(SECTION_GAP / 2);
+      }
+    }
     if (sec.type === 'free') {
       renderFreePage(sec);
     } else {
       renderSection(sec);
     }
+    if (willRender) prevRendered = true;
   }
 
   // 绘制全局备注（在所有分区后）
