@@ -6,6 +6,3 @@ images_webp/
 
 # 抓取过程的临时 bundle
 scrape_tmp/
-
-# 旧备份目录（非源码）
-backups/
