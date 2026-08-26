@@ -2073,7 +2073,7 @@ async function exportImages(build) {
     return { previews, badgeW, badgeText, cellW, pvH, gap };
   }
 
-  function drawSectionHeader(sec) {
+  function drawSectionHeader(sec, trailGap = 24) {
     const sx = PAD_X, sy = y;
     const lay = calcSecHeaderLayout(sec);
     let badgeX = sx;
@@ -2102,7 +2102,7 @@ async function exportImages(build) {
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'center';
     ctx.fillText(lay.badgeText, badgeX + bw / 2, badgeY + SEC_BADGE_H / 2);
-    y += (lay.previews.length ? lay.pvH : SEC_HEADER_H) + 24;   // 预览图与首行道具间距 8→24
+    y += (lay.previews.length ? lay.pvH : SEC_HEADER_H) + trailGap;   // 预览图与下方内容间距（道具分区24，自由页10）
   }
 
   function drawItemCell(item, col) {
@@ -2344,23 +2344,23 @@ async function exportImages(build) {
     const imgW = Math.round(stageW * fp.w / 100);
     const imgH = Math.round(imgW * (fp.imgH / fp.imgW));
     const imgX = PAD_X + Math.round(stageW * fp.x / 100);
-    const imgY = y;
     // 分区头实际高度（自由分区也可能带多张预览图）
     const hh = calcSecHeaderLayout(sec).pvH;
-    // Reserve space: image height + some padding
+    // Reserve space: 头高 + 10(间距) + 图高 + 32(底部)
     const totalNeeded = hh + imgH + 42;
     if (totalNeeded > availH()) {
       newPage(false);
     }
-    drawSectionHeader(sec);
-    // Draw image
+    // 传 10：头底部与图片间距 10px（drawSectionHeader 只推进头高+10）
+    drawSectionHeader(sec, 10);
+    // Draw image（此时 y 已在头底部 + 10）
     const img = imgCache[fp.image];
     if (img) {
-      drawImageContain(ctx, img, imgX, y + hh + 10, imgW, imgH);
+      drawImageContain(ctx, img, imgX, y, imgW, imgH);
     } else {
       // Placeholder
       ctx.fillStyle = '#f0e8f4';
-      drawRoundedRect(ctx, imgX, y + hh + 10, imgW, imgH, 12);
+      drawRoundedRect(ctx, imgX, y, imgW, imgH, 12);
       ctx.fill();
       ctx.strokeStyle = '#7c5fb6';
       ctx.lineWidth = 2;
@@ -2371,7 +2371,7 @@ async function exportImages(build) {
     const markerFont = 22;
     (sec.markers || []).forEach((mk, mkIdx) => {
       const mx = imgX + Math.round(imgW * mk.rx);
-      const my = (y + hh + 10) + Math.round(imgH * mk.ry);
+      const my = y + Math.round(imgH * mk.ry);
       // Numbered circle (purple bg, white text, white border)
       ctx.fillStyle = '#7c5fb6';
       ctx.beginPath();
@@ -2386,7 +2386,7 @@ async function exportImages(build) {
       ctx.textBaseline = 'middle';
       ctx.fillText(String(mkIdx + 1), mx, my);
     });
-    y += hh + imgH + 32;
+    y += imgH + 32;
     // Marker notes (text list below image)
     if ((sec.markers || []).length > 0) {
       const noteItems = (sec.markers || []).map((mk, i) => ({
