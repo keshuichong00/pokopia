@@ -2259,7 +2259,7 @@ async function exportImages(build) {
     cw = Math.round(cw * scale);
     ch = Math.round(ch * scale);
     const cx = 120;                      // 距背景左边约 120px
-    const cy = 50;
+    const cy = 65;
     // 阴影
     ctx.fillStyle = 'rgba(124,95,182,0.18)';
     drawRoundedRect(ctx, cx + 4, cy + 4, cw, ch, 12);
@@ -2277,10 +2277,10 @@ async function exportImages(build) {
   // logo.png 尺寸 261x192
   if (imgCache.__LOGO) {
     const lg = imgCache.__LOGO;
-    const scale = 1.15;
+    const scale = 1.35;
     const dw = Math.round(lg.width * scale);
     const dh = Math.round(lg.height * scale);
-    const centerX = 195;
+    const centerX = 190;
     const centerY = Math.round(dh / 2) + 4;  // 下移，保证 logo 完整可见 (dy≈4)
     const dx = centerX - Math.round(dw / 2);
     const dy = centerY - Math.round(dh / 2);
