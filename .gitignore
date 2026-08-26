@@ -1,5 +1,8 @@
-# Build artifacts (can be regenerated from template + build.py)
-index.html
+# 原始下载的大图（95MB，可重跑 download_images.py 重新获取）
+images/
 
-# Large base64 cache files (regenerated from .jpg by build.py)
-*.b64
+# 离线版构建的中间产物（可重跑 convert_images.py 重新生成）
+images_webp/
+
+# 抓取过程的临时 bundle
+scrape_tmp/

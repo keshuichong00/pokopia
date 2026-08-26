@@ -2,13 +2,30 @@
 # -*- coding: utf-8 -*-
 """
 从 pokokit.com 的 JS bundle 提取所有道具数据
+用法: python scrape_items.py [bundle路径]
+  不带参数时自动从官网下载最新 comfort-estimate bundle
 """
 import json
 import re
+import sys
+import datetime
 from pathlib import Path
 
-# 数据文件路径
-data_file = Path("C:/Users/hphdl/.agent-browser/tmp/scenes/data.js")
+# 数据文件路径：命令行参数 > 本地缓存
+data_file = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("scrape_tmp/comfort.js")
+
+if not data_file.exists():
+    # 自动下载最新 bundle（comfort-estimate chunk 携带全部道具表）
+    import urllib.request
+    print("本地无缓存，开始下载最新 bundle...")
+    data_file.parent.mkdir(parents=True, exist_ok=True)
+    req = urllib.request.Request(
+        "https://www.pokokit.com/_astro/comfort-estimate.DT70QqPK.js",
+        headers={"User-Agent": "Mozilla/5.0"},
+    )
+    data_file.write_bytes(urllib.request.urlopen(req, timeout=120).read())
+    print(f"✓ 已下载: {data_file} ({data_file.stat().st_size:,} 字节)")
+
 content = data_file.read_text(encoding="utf-8")
 
 print(f"读取 {data_file}, 大小: {len(content):,} 字符")
@@ -90,13 +107,13 @@ print(f"\n总数校验: {sum(cat_count.values())} (期望 1697)")
 # 6. 保存 JSON
 output = {
     "source": "https://www.pokokit.com",
-    "scraped_at": "2026-08-20",
+    "scraped_at": datetime.date.today().isoformat(),
     "total": len(items),
     "category_map": category_map,
     "items": items,
 }
 
-out_path = Path("D:/WorkBuddy/pokopia-toolkit/items.json")
+out_path = Path(__file__).parent / "items.json"
 out_path.write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8")
 print(f"\n✓ 已保存到: {out_path}")
 print(f"  文件大小: {out_path.stat().st_size:,} 字节")

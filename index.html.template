@@ -2274,16 +2274,29 @@ async function exportImages(build) {
   }
 
   // Pokemon Pokopia logo：放大，下移保证完整性，与封面有重叠
-  // logo.png 尺寸 261x192
+  // logo.png 尺寸 261x192，外扩 5px 白色描边
   if (imgCache.__LOGO) {
     const lg = imgCache.__LOGO;
     const scale = 1.35;
     const dw = Math.round(lg.width * scale);
     const dh = Math.round(lg.height * scale);
     const centerX = 190;
-    const centerY = Math.round(dh / 2) + 4;  // 下移，保证 logo 完整可见 (dy≈4)
+    const centerY = Math.round(dh / 2) + 6;  // 下移，保证 logo + 描边完整可见 (dy≈6)
     const dx = centerX - Math.round(dw / 2);
     const dy = centerY - Math.round(dh / 2);
+    // 白色描边：构建白色剪影，环形偏移 24 方向 × 5px 铺满描边
+    const oc = document.createElement('canvas');
+    oc.width = dw; oc.height = dh;
+    const octx = oc.getContext('2d');
+    octx.drawImage(lg, 0, 0, dw, dh);
+    octx.globalCompositeOperation = 'source-in';
+    octx.fillStyle = '#ffffff';
+    octx.fillRect(0, 0, dw, dh);
+    const STEPS = 24;
+    for (let a = 0; a < STEPS; a++) {
+      const rad = (a / STEPS) * Math.PI * 2;
+      ctx.drawImage(oc, dx + Math.round(Math.cos(rad) * 5), dy + Math.round(Math.sin(rad) * 5));
+    }
     ctx.drawImage(lg, dx, dy, dw, dh);
   }
 
