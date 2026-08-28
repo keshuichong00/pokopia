@@ -1666,13 +1666,8 @@ function renderPickerGrid() {
     cell.appendChild(el('div', { class: 'picker-name' }, it.nameZh));
     cell.onclick = () => {
       const sec = state.draftBuild.sections[state.pickerTarget];
-      // 检查是否已存在
-      const exist = sec.items.find(x => x.id === it.id);
-      if (exist) {
-        exist.qty = (exist.qty || 1) + 1;
-      } else {
-        sec.items.push({ id: it.id, qty: 1 });
-      }
+      // 允许重复添加：每次选择都新增一个独立实例（独立格子）
+      sec.items.push({ id: it.id, qty: 1 });
       $('#pickerModal').classList.remove('open');
       render();
       toast('已加入：' + it.nameZh);
