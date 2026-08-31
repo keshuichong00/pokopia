@@ -2567,7 +2567,7 @@ async function exportImages(build) {
     cctx.font = `30px "PingFang SC", "Microsoft YaHei", sans-serif`;
     cctx.fillStyle = '#9e8fbe';
     cctx.textAlign = 'center';
-    cctx.fillText('第 ' + (pi + 1) + ' / 共 ' + totalPages + ' 页', EXPORT_W / 2, EXPORT_H - 48);
+    cctx.fillText('第 ' + (pi + 1) + ' / 共 ' + totalPages + ' 页', EXPORT_W / 2, EXPORT_H - 25);
     cctx.restore();
   });
 
