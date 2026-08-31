@@ -2314,9 +2314,6 @@ async function exportImages(build) {
   ctx.fillStyle = 'rgba(255,255,255,0.92)';
   drawRoundedRect(ctx, titleBg.x, titleBg.y, titleBg.w, titleBg.h, 12);
   ctx.fill();
-  // 左边紫色描边
-  ctx.fillStyle = '#7c5fb6';
-  ctx.fillRect(titleBg.x, titleBg.y, 8, titleBg.h);
   // 标题文字：左对齐 + 垂直居中于框
   ctx.fillStyle = '#7c5fb6';
   ctx.font = `bold 48px "PingFang SC", "Microsoft YaHei", sans-serif`;
