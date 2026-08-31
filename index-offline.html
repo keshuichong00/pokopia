@@ -2534,7 +2534,7 @@ async function exportImages(build) {
       const authorText = '@' + build.author.trim();
       cctx.font = `bold 40px "PingFang SC", "Microsoft YaHei", sans-serif`;          // @作者 字号（用户要求 40px 粗体）
       const tw = cctx.measureText(authorText).width;
-      const AV = 64;                                   // 头像直径（放大，便于辨识）
+      const AV = 100;                                  // 头像直径（放大，便于辨识）
       const hasAvatar = !!(build.avatar && imgCache[build.avatar]);
       const AV_GAP = 24;                                // 头像与名字间距（拉开，避免黏连）
       const bh = hasAvatar ? Math.max(56, AV + 16) : 56;
@@ -2564,8 +2564,8 @@ async function exportImages(build) {
     }
 
     // --- 底部居中页码：第 N / 共 M 页 ---
-    cctx.font = `30px "PingFang SC", "Microsoft YaHei", sans-serif`;
-    cctx.fillStyle = '#9e8fbe';
+    cctx.font = `26px "PingFang SC", "Microsoft YaHei", sans-serif`;
+    cctx.fillStyle = '#ffffff';
     cctx.textAlign = 'center';
     cctx.fillText('第 ' + (pi + 1) + ' / 共 ' + totalPages + ' 页', EXPORT_W / 2, EXPORT_H - 25);
     cctx.restore();
