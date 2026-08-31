@@ -1986,7 +1986,7 @@ async function exportImages(build) {
   const SECTION_GAP = 120;             // 分区间距（虚线两侧各半）
   const NOTES_FONT = 36;               // 备注字号（与 NAME_FONT 一致）
   const MARKER_NOTE_FONT = 42;        // 自由页标注列表正文（用户要求 42px，区别于备注/道具名）
-  const NOTES_LINE_H = 54;             // 备注/标注行高：1.5×字号，避免中文多行拥挤
+  const NOTES_LINE_H = 63;             // 备注/标注行高：1.5×字号(42px)，避免中文多行拥挤
   const CELL_H = ICON_SIZE + 12 + NAME_LINE_H * NAME_MAX_LINES + 8;
   const ROW_GAP = 40;                 // 行间距（方案B：28→40）
   const ROW_H = CELL_H + ROW_GAP;
@@ -2205,7 +2205,7 @@ async function exportImages(build) {
     if (!trimmed) return;
     const bottomY = EXPORT_H - BODY_BOTTOM_PAD;
     // 计算高度（保留手动换行 \n）
-    ctx.font = `${NAME_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${MARKER_NOTE_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
     const maxW = CW - 60;
     const lines = wrapNotesLines(trimmed, maxW, 14);
     const notesH = 24 + lines.length * NOTES_LINE_H + 24;
@@ -2228,7 +2228,7 @@ async function exportImages(build) {
     ctx.fill();
     // 文字
     ctx.fillStyle = '#2c2138';
-    ctx.font = `${NAME_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${MARKER_NOTE_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textBaseline = 'top';
     ctx.textAlign = 'left';
     let ty = ny + 20;
