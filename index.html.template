@@ -1975,12 +1975,12 @@ async function exportImages(build) {
   const TITLE_BAR_H = 100;            // 顶部标题栏高度 (附件1的细长栏)
   const TITLE_GAP = 40;               // 标题栏与主内容间距
   const COLS = 5;                     // 列数保持 5（方案B：密度保留）
-  const CELL_W = 250;                 // 方案B：270→250，卡片间隙 27.5→52.5
+  const CELL_W = 248;                 // 方案B：270→250→248，卡片间隙 52.5→55（取整，消除半像素描边发虚）
   const CELL_GAP = (CW - COLS * CELL_W) / (COLS - 1);
   const ICON_SIZE = 160;              // 图标尺寸（方案B：170→160）
   const NAME_FONT = 36;               // 道具名字号
   const NAME_LINE_H = 42;
-  const NAME_MAX_LINES = 2;
+  const NAME_MAX_LINES = 3;           // 道具名最多 3 行（超长名不再被 '…' 截断）
   const QTY_FONT = 26;
   const SEC_TITLE_FONT = 38;
   const SECTION_GAP = 120;             // 分区间距（虚线两侧各半）
@@ -2172,6 +2172,7 @@ async function exportImages(build) {
     if (qty > 1) {
       ctx.fillStyle = '#7c5fb6';
       ctx.font = `bold ${QTY_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.textAlign = 'right';
       ctx.fillText('×' + qty, cx + CELL_W - 12, cy + 12);
     }
   }
@@ -2224,9 +2225,6 @@ async function exportImages(build) {
     ctx.fillStyle = '#fff';
     drawRoundedRect(ctx, nx, ny, CW, nh, 12);
     ctx.fill();
-    // 左边紫色描边
-    ctx.fillStyle = '#7c5fb6';
-    ctx.fillRect(nx, ny, 6, nh);
     // 文字
     ctx.fillStyle = '#2c2138';
     ctx.font = `${NAME_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
@@ -2426,8 +2424,6 @@ async function exportImages(build) {
         ctx.fillStyle = '#faf5fc';
         drawRoundedRect(ctx, nx, ny, CW, totalH, 12);
         ctx.fill();
-        ctx.fillStyle = '#7c5fb6';
-        ctx.fillRect(nx, ny, 6, totalH);
         // Items
         let cy = ny + 16;
         noteItems.forEach((it, i) => {
