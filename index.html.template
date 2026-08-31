@@ -2534,10 +2534,11 @@ async function exportImages(build) {
       const authorText = '@' + build.author.trim();
       cctx.font = `bold 40px "PingFang SC", "Microsoft YaHei", sans-serif`;          // @作者 字号（用户要求 40px 粗体）
       const tw = cctx.measureText(authorText).width;
-      const AV = 44;                                   // 头像直径
+      const AV = 64;                                   // 头像直径（放大，便于辨识）
       const hasAvatar = !!(build.avatar && imgCache[build.avatar]);
-      const bh = hasAvatar ? Math.max(56, AV + 12) : 56;
-      const bw = hasAvatar ? (8 + AV + 12 + tw + 20) : (tw + 56);
+      const AV_GAP = 24;                                // 头像与名字间距（拉开，避免黏连）
+      const bh = hasAvatar ? Math.max(56, AV + 16) : 56;
+      const bw = hasAvatar ? (8 + AV + AV_GAP + tw + 20) : (tw + 56);
       const bx = PAD_X;
       const by = EXPORT_H - bh - 20;
       // 橙色圆角底块
@@ -2556,7 +2557,7 @@ async function exportImages(build) {
         cctx.drawImage(imgCache[build.avatar], ax, ay, AV, AV);
         cctx.restore();
         // 名字（右）
-        cctx.fillText(authorText, ax + ar + 12 + tw / 2, by + bh / 2 + 1);
+        cctx.fillText(authorText, ax + ar + AV_GAP + tw / 2, by + bh / 2 + 1);
       } else {
         cctx.fillText(authorText, bx + bw / 2, by + bh / 2 + 1);
       }
