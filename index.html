@@ -269,6 +269,15 @@
   }
   .cover-uploader img { width: 100%; height: 100%; object-fit: cover; }
   .cover-uploader:hover { background: var(--primary); color: white; }
+  .avatar-uploader {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: var(--primary-light);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; overflow: hidden; position: relative;
+    color: var(--primary-dark); font-size: 12px; border: 2px solid var(--border);
+  }
+  .avatar-uploader img { width: 100%; height: 100%; object-fit: cover; }
+  .avatar-uploader:hover { background: var(--primary); color: white; }
 
   .section-card {
     background: var(--card);
@@ -1038,6 +1047,7 @@ function createNewBuild() {
       id: genId(),
       name: '新材料单',
       author: '',
+      avatar: '',
       cover: '',
       sections: [{ title: '分区 1', preview: '', items: [], notes: '' }],
       notes: '', // 全局备注（在所有分区下方）
@@ -1110,6 +1120,21 @@ function renderEditor(app) {
     el('label', {}, '作者'),
     el('input', { type: 'text', value: b.author || '', oninput: e => b.author = e.target.value, placeholder: '如：瞌睡虫' }),
   ));
+  // 作者头像上传（圆形）
+  const avatarRow = el('div', { class: 'editor-row' });
+  avatarRow.appendChild(el('label', {}, '作者头像'));
+  const avatarEl = el('div', { class: 'avatar-uploader' });
+  if (b.avatar) {
+    avatarEl.appendChild(el('img', { src: b.avatar }));
+  } else {
+    avatarEl.appendChild(document.createTextNode('点击上传'));
+  }
+  avatarEl.onclick = () => uploadImage(dataUrl => { b.avatar = dataUrl; render(); });
+  avatarRow.appendChild(avatarEl);
+  if (b.avatar) {
+    avatarRow.appendChild(el('button', { class: 'btn btn-sm btn-ghost', onclick: () => { b.avatar = ''; render(); } }, '移除头像'));
+  }
+  infoPanel.appendChild(avatarRow);
   const coverRow = el('div', { class: 'editor-row' });
   coverRow.appendChild(el('label', {}, '封面图'));
   const coverEl = el('div', { class: 'cover-uploader' });
@@ -1949,6 +1974,7 @@ async function exportImages(build) {
     });
   });
   if (build.cover) tasks.push(loadImg(build.cover).then(img => { imgCache[build.cover] = img; }));
+  if (build.avatar) tasks.push(loadImg(build.avatar).then(img => { imgCache[build.avatar] = img; }));
   (build.sections || []).forEach(sec => {
     secPreviews(sec).forEach(pv => {
       if (!seen.has(pv)) {
@@ -2496,29 +2522,53 @@ async function exportImages(build) {
   // 收尾
   if (canvas) pages.push(canvas);
 
-  // === 每页左下角：作者纯色块 + 名字 ===
-  if (build.author && build.author.trim()) {
-    const authorText = '@' + build.author.trim();
-    pages.forEach(cv => {
-      const cctx = cv.getContext('2d');
-      cctx.save();
-      cctx.font = `bold 40px "PingFang SC", "Microsoft YaHei", sans-serif`;          // @作者 色块字号（用户要求 40px 粗体）
+  // === 每页页脚：左下角作者（头像 + 名字） + 底部居中页码 ===
+  const totalPages = pages.length;
+  pages.forEach((cv, pi) => {
+    const cctx = cv.getContext('2d');
+    cctx.save();
+    cctx.textBaseline = 'middle';
+
+    // --- 作者块（左下角）---
+    if (build.author && build.author.trim()) {
+      const authorText = '@' + build.author.trim();
+      cctx.font = `bold 40px "PingFang SC", "Microsoft YaHei", sans-serif`;          // @作者 字号（用户要求 40px 粗体）
       const tw = cctx.measureText(authorText).width;
-      const bw = tw + 56, bh = 56;
+      const AV = 44;                                   // 头像直径
+      const hasAvatar = !!(build.avatar && imgCache[build.avatar]);
+      const bh = hasAvatar ? Math.max(56, AV + 12) : 56;
+      const bw = hasAvatar ? (8 + AV + 12 + tw + 20) : (tw + 56);
       const bx = PAD_X;
       const by = EXPORT_H - bh - 20;
-      // 纯色块
+      // 橙色圆角底块
       cctx.fillStyle = '#ff8a3d';
       drawRoundedRect(cctx, bx, by, bw, bh, 14);
       cctx.fill();
-      // 名字（白色粗体，居中显示在色块上）
       cctx.fillStyle = '#fff';
       cctx.textAlign = 'center';
-      cctx.textBaseline = 'middle';
-      cctx.fillText(authorText, bx + bw / 2, by + bh / 2 + 1);
-      cctx.restore();
-    });
-  }
+      if (hasAvatar) {
+        // 圆形头像（左）
+        const ax = bx + 8, ay = by + (bh - AV) / 2, ar = AV / 2;
+        cctx.save();
+        cctx.beginPath();
+        cctx.arc(ax + ar, ay + ar, ar, 0, Math.PI * 2);
+        cctx.clip();
+        cctx.drawImage(imgCache[build.avatar], ax, ay, AV, AV);
+        cctx.restore();
+        // 名字（右）
+        cctx.fillText(authorText, ax + ar + 12 + tw / 2, by + bh / 2 + 1);
+      } else {
+        cctx.fillText(authorText, bx + bw / 2, by + bh / 2 + 1);
+      }
+    }
+
+    // --- 底部居中页码：第 N / 共 M 页 ---
+    cctx.font = `30px "PingFang SC", "Microsoft YaHei", sans-serif`;
+    cctx.fillStyle = '#9e8fbe';
+    cctx.textAlign = 'center';
+    cctx.fillText('第 ' + (pi + 1) + ' / 共 ' + totalPages + ' 页', EXPORT_W / 2, EXPORT_H - 48);
+    cctx.restore();
+  });
 
   // === 4. 下载 ===
   for (let i = 0; i < pages.length; i++) {
