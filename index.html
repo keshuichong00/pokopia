@@ -1982,10 +1982,10 @@ async function exportImages(build) {
   const NAME_LINE_H = 42;
   const NAME_MAX_LINES = 3;           // 道具名最多 3 行（超长名不再被 '…' 截断）
   const QTY_FONT = 26;
-  const SEC_TITLE_FONT = 40;            // 分区标题徽章字号（用户要求 40px 粗体 左对齐）
+  const SEC_TITLE_FONT = 45;            // 分区标题徽章字号（用户要求 45px 粗体 左对齐）
   const SECTION_GAP = 120;             // 分区间距（虚线两侧各半）
   const NOTES_FONT = 36;               // 备注字号（与 NAME_FONT 一致）
-  const MARKER_NOTE_FONT = 38;        // 自由页标注列表正文（用户要求 38px，区别于备注/道具名）
+  const MARKER_NOTE_FONT = 42;        // 自由页标注列表正文（用户要求 42px，区别于备注/道具名）
   const NOTES_LINE_H = 54;             // 备注/标注行高：1.5×字号，避免中文多行拥挤
   const CELL_H = ICON_SIZE + 12 + NAME_LINE_H * NAME_MAX_LINES + 8;
   const ROW_GAP = 40;                 // 行间距（方案B：28→40）
@@ -2382,8 +2382,8 @@ async function exportImages(build) {
       ctx.stroke();
     }
     // Draw markers
-    const markerR = 24;                // 图片上编号圆点半径（配合 30px 数字）
-    const markerFont = 30;            // 图片上编号圆点内数字（用户要求 30px 粗体）
+    const markerR = 26;                // 图片上编号圆点半径（配合 32px 数字）
+    const markerFont = 32;            // 图片上编号圆点内数字（用户要求 32px 粗体）
     (sec.markers || []).forEach((mk, mkIdx) => {
       const mx = imgX + Math.round(imgW * mk.rx);
       const my = y + Math.round(imgH * mk.ry);
@@ -2432,10 +2432,10 @@ async function exportImages(build) {
           // Number circle
           ctx.fillStyle = '#7c5fb6';
           ctx.beginPath();
-          ctx.arc(nx + 32, cy + 16, 16, 0, Math.PI * 2);
+          ctx.arc(nx + 32, cy + 16, 18, 0, Math.PI * 2);
           ctx.fill();
           ctx.fillStyle = '#fff';
-          ctx.font = `bold 20px "PingFang SC", "Microsoft YaHei", sans-serif`;
+          ctx.font = `bold 25px "PingFang SC", "Microsoft YaHei", sans-serif`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillText(String(it.num), nx + 32, cy + 16);
@@ -2502,7 +2502,7 @@ async function exportImages(build) {
     pages.forEach(cv => {
       const cctx = cv.getContext('2d');
       cctx.save();
-      cctx.font = `bold 36px "PingFang SC", "Microsoft YaHei", sans-serif`;          // @作者 色块字号（用户要求 36px 粗体）
+      cctx.font = `bold 38px "PingFang SC", "Microsoft YaHei", sans-serif`;          // @作者 色块字号（用户要求 38px 粗体）
       const tw = cctx.measureText(authorText).width;
       const bw = tw + 56, bh = 56;
       const bx = PAD_X;
