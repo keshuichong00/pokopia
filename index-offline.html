@@ -2034,7 +2034,7 @@ async function exportImages(build) {
       ctx.font = `bold 36px "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.textBaseline = 'middle';
       ctx.textAlign = 'center';
-      ctx.fillText((build.name || '未命名') + ' 材料单', EXPORT_W / 2, 600);
+      ctx.fillText(build.name || '未命名', EXPORT_W / 2, 600);
       // 不增加 y，由后续bodyTop接管
       return false; // 不预留空间
     }
@@ -2047,7 +2047,7 @@ async function exportImages(build) {
     ctx.font = `bold 38px "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
-    ctx.fillText((build.name || '未命名') + ' 材料单', bx + 24, by + bh / 2);
+    ctx.fillText(build.name || '未命名', bx + 24, by + bh / 2);
     y += TITLE_BAR_H + TITLE_GAP;
     return true;
   }
@@ -2176,27 +2176,36 @@ async function exportImages(build) {
     }
   }
 
+  // 工具：按宽度折行，但保留手动换行（\n 分段）
+  function wrapNotesLines(text, maxW, maxLines) {
+    const out = [];
+    for (const para of String(text).split('\n')) {
+      if (para === '') { out.push(''); continue; } // 空段落 = 一个空行占位
+      let line = '';
+      for (const ch of [...para]) {
+        const test = line + ch;
+        if (ctx.measureText(test).width > maxW && line) {
+          out.push(line);
+          line = ch;
+          if (out.length >= maxLines) return out;
+        } else { line = test; }
+      }
+      if (line) out.push(line);
+      if (out.length >= maxLines) return out;
+    }
+    return out;
+  }
+
   // 文字备注绘制（通用，用于分区备注和全局备注）
   function drawNotes(text, opts = {}) {
     const { isContinuation = false } = opts;
     const trimmed = (text || '').trim();
     if (!trimmed) return;
     const bottomY = EXPORT_H - BODY_BOTTOM_PAD;
-    // 计算高度
+    // 计算高度（保留手动换行 \n）
     ctx.font = `${NAME_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
     const maxW = CW - 60;
-    const chars = [...trimmed];
-    const lines = [];
-    let line = '';
-    for (const ch of chars) {
-      const test = line + ch;
-      if (ctx.measureText(test).width > maxW && line) {
-        lines.push(line);
-        line = ch;
-        if (lines.length >= 14) break; // 限制最大行数
-      } else { line = test; }
-    }
-    if (line) lines.push(line);
+    const lines = wrapNotesLines(trimmed, maxW, 14);
     const notesH = 24 + lines.length * NOTES_LINE_H + 24;
     // 检查是否需要换页
     if (bottomY - y < notesH + 30) {
@@ -2225,7 +2234,7 @@ async function exportImages(build) {
     ctx.textAlign = 'left';
     let ty = ny + 20;
     for (const ln of lines) {
-      ctx.fillText(ln, nx + 24, ty);
+      if (ln) ctx.fillText(ln, nx + 24, ty); // 空行不绘制，仅占位保留换行
       ty += NOTES_LINE_H;
     }
     y = ny + nh + 10;
@@ -2313,7 +2322,7 @@ async function exportImages(build) {
   ctx.font = `bold 48px "PingFang SC", "Microsoft YaHei", sans-serif`;
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'left';
-  ctx.fillText((build.name || '未命名') + ' 材料单', titleBg.x + 36, titleY);
+  ctx.fillText(build.name || '未命名', titleBg.x + 36, titleY);
 
   // 绘制分区
   function renderSection(sec) {
@@ -2408,17 +2417,8 @@ async function exportImages(build) {
         const maxW = CW - 100;
         // Compute total height needed
         const itemHeights = noteItems.map(it => {
-          const chars = [...it.text];
-          let line = '', lines = 0;
-          for (const ch of chars) {
-            const test = line + ch;
-            if (ctx.measureText(test).width > maxW - 80 && line) {
-              lines++;
-              line = ch;
-            } else { line = test; }
-          }
-          if (line) lines++;
-          return Math.max(1, lines) * NOTES_LINE_H + 16;
+          const n = wrapNotesLines(it.text, maxW - 80, 99).length;
+          return Math.max(1, n) * NOTES_LINE_H + 16;
         });
         const totalH = itemHeights.reduce((a, b) => a + b, 0) + 20;
         if (y + totalH > EXPORT_H - BODY_BOTTOM_PAD) {
@@ -2450,17 +2450,12 @@ async function exportImages(build) {
           ctx.font = `${NAME_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
           ctx.textAlign = 'left';
           ctx.textBaseline = 'top';
-          const chars = [...it.text];
-          let line = '', lineY = cy + 6;
-          for (const ch of chars) {
-            const test = line + ch;
-            if (ctx.measureText(test).width > maxW - 80 && line) {
-              ctx.fillText(line, nx + 64, lineY);
-              lineY += NOTES_LINE_H;
-              line = ch;
-            } else { line = test; }
+          const ls = wrapNotesLines(it.text, maxW - 80, 99);
+          let lineY = cy + 6;
+          for (const ln of ls) {
+            if (ln) ctx.fillText(ln, nx + 64, lineY); // 空行不绘制，仅占位
+            lineY += NOTES_LINE_H;
           }
-          if (line) ctx.fillText(line, nx + 64, lineY);
           cy += itemH;
         });
         y = ny + totalH + 12;
