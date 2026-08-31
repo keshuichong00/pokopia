@@ -1991,7 +1991,7 @@ async function exportImages(build) {
   const ROW_GAP = 40;                 // 行间距（方案B：28→40）
   const ROW_H = CELL_H + ROW_GAP;
   const SEC_HEADER_H = 90;            // 分区标题高（仅预览图+badge 风格，更紧凑）
-  const SEC_BADGE_H = 56;
+  const SEC_BADGE_H = 78;            // 分区标题徽章紫框高度（比 50px 字号放宽，视觉更舒展）
   // 每页内容可用区域高度 (附件1: ~1900, 附件2: ~2560)
   const PG1_BODY_TOP = 660;           // 附件1 白色面板顶 + 内边距（缩小与标题栏间距）
   const PG_NEXT_BODY_TOP = 110;       // 附件2 白色面板顶 + 内边距
@@ -2059,7 +2059,7 @@ async function exportImages(build) {
     const previews = secPreviews(sec).filter(pv => imgCache[pv]);
     const badgeText = '[ ' + (sec.title || '未命名') + ' ]';
     ctx.font = `bold ${SEC_TITLE_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
-    const badgeW = Math.round(ctx.measureText(badgeText).width) + 40;
+    const badgeW = Math.round(ctx.measureText(badgeText).width) + 64;
     if (!previews.length) return { previews, badgeW, badgeText, cellW: 0, pvH: SEC_HEADER_H, gap: 12 };
     const n = previews.length;
     const gap = 12;
