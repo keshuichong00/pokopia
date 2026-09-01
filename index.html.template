@@ -2450,6 +2450,10 @@ async function exportImages(build) {
       ctx.font = `bold ${markerFont}px "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = '#fff';
+      ctx.strokeText(String(mkIdx + 1), mx, my);   // 白色描边：数字更粗更立体
       ctx.fillText(String(mkIdx + 1), mx, my);
     });
     y += imgH + 32;
@@ -2489,6 +2493,10 @@ async function exportImages(build) {
           ctx.font = `bold 30px "PingFang SC", "Microsoft YaHei", sans-serif`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
+          ctx.lineJoin = 'round';
+          ctx.lineWidth = 4;
+          ctx.strokeStyle = '#fff';
+          ctx.strokeText(String(it.num), nx + 32, cy + 16);   // 白色描边
           ctx.fillText(String(it.num), nx + 32, cy + 16);
           // Text
           ctx.fillStyle = '#2c2138';
