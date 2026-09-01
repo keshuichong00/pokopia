@@ -2529,38 +2529,38 @@ async function exportImages(build) {
     cctx.save();
     cctx.textBaseline = 'middle';
 
-    // --- 作者块（左下角）---
+    // --- 作者块（左下角）：头像单独出现（无橙色框），@名字在旁独立橙色块 ---
+    const AV = 100;                                   // 头像直径
+    const hasAvatar = !!(build.avatar && imgCache[build.avatar]);
+    const NB_GAP = 20;                                // 头像与名字块的间距
+    const NB_H = 56;                                  // 名字块高度
+    const avBottom = EXPORT_H - 20;                   // 头像下沿距底 20px
+    const avTop = avBottom - AV;
+    // 名字独立橙色块（在头像右侧；无头像时从 PAD_X 起）
     if (build.author && build.author.trim()) {
       const authorText = '@' + build.author.trim();
-      cctx.font = `bold 40px "PingFang SC", "Microsoft YaHei", sans-serif`;          // @作者 字号（用户要求 40px 粗体）
+      cctx.font = `bold 40px "PingFang SC", "Microsoft YaHei", sans-serif`;
       const tw = cctx.measureText(authorText).width;
-      const AV = 100;                                  // 头像直径（放大，便于辨识）
-      const hasAvatar = !!(build.avatar && imgCache[build.avatar]);
-      const AV_GAP = 24;                                // 头像与名字间距（拉开，避免黏连）
-      const bh = hasAvatar ? Math.max(56, AV + 16) : 56;
-      const bw = hasAvatar ? (8 + AV + AV_GAP + tw + 20) : (tw + 56);
-      const bx = PAD_X;
-      const by = EXPORT_H - bh - 20;
-      // 橙色圆角底块
-      cctx.fillStyle = '#ff8a3d';
-      drawRoundedRect(cctx, bx, by, bw, bh, 14);
+      const nbw = tw + 56;
+      const nbx = hasAvatar ? (PAD_X + AV + NB_GAP) : PAD_X;
+      const nbY = avTop + (AV - NB_H) / 2;            // 与头像垂直居中对齐
+      cctx.fillStyle = '#ff8a3d';                     // 橙色圆角底块
+      drawRoundedRect(cctx, nbx, nbY, nbw, NB_H, 14);
       cctx.fill();
       cctx.fillStyle = '#fff';
       cctx.textAlign = 'center';
-      if (hasAvatar) {
-        // 圆形头像（左）
-        const ax = bx + 8, ay = by + (bh - AV) / 2, ar = AV / 2;
-        cctx.save();
-        cctx.beginPath();
-        cctx.arc(ax + ar, ay + ar, ar, 0, Math.PI * 2);
-        cctx.clip();
-        cctx.drawImage(imgCache[build.avatar], ax, ay, AV, AV);
-        cctx.restore();
-        // 名字（右）
-        cctx.fillText(authorText, ax + ar + AV_GAP + tw / 2, by + bh / 2 + 1);
-      } else {
-        cctx.fillText(authorText, bx + bw / 2, by + bh / 2 + 1);
-      }
+      cctx.textBaseline = 'middle';
+      cctx.fillText(authorText, nbx + nbw / 2, nbY + NB_H / 2 + 1);
+    }
+    // 头像（单独，无橙色框）
+    if (hasAvatar) {
+      const ax = PAD_X, ay = avTop, ar = AV / 2;
+      cctx.save();
+      cctx.beginPath();
+      cctx.arc(ax + ar, ay + ar, ar, 0, Math.PI * 2);
+      cctx.clip();
+      cctx.drawImage(imgCache[build.avatar], ax, ay, AV, AV);
+      cctx.restore();
     }
 
     // --- 底部居中页码：第 N / 共 M 页 ---
