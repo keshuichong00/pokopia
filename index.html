@@ -2098,8 +2098,8 @@ async function exportImages(build) {
     ctx.fillStyle = '#7c5fb6';
     ctx.font = `bold 38px "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textBaseline = 'middle';
-    ctx.textAlign = 'left';
-    ctx.fillText(build.name || '未命名', bx + 24, by + bh / 2);
+    ctx.textAlign = 'center';
+    ctx.fillText(build.name || '未命名', bx + bw / 2, by + bh / 2);
     y += TITLE_BAR_H + TITLE_GAP;
     return true;
   }
@@ -2364,12 +2364,12 @@ async function exportImages(build) {
   ctx.fillStyle = 'rgba(255,255,255,0.92)';
   drawRoundedRect(ctx, titleBg.x, titleBg.y, titleBg.w, titleBg.h, 12);
   ctx.fill();
-  // 标题文字：左对齐 + 垂直居中于框
+  // 标题文字：水平居中 + 垂直居中于框
   ctx.fillStyle = '#7c5fb6';
   ctx.font = `bold 50px "PingFang SC", "Microsoft YaHei", sans-serif`;
   ctx.textBaseline = 'middle';
-  ctx.textAlign = 'left';
-  ctx.fillText(build.name || '未命名', titleBg.x + 36, titleY);
+  ctx.textAlign = 'center';
+  ctx.fillText(build.name || '未命名', titleBg.x + titleBg.w / 2, titleY);
 
   // 绘制分区
   function renderSection(sec) {
