@@ -2085,8 +2085,8 @@ async function exportImages(build) {
       ctx.fillStyle = '#7c5fb6';
       ctx.font = `bold 36px "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.textBaseline = 'middle';
-      ctx.textAlign = 'center';
-      ctx.fillText(build.name || '未命名', EXPORT_W / 2, 500);
+      ctx.textAlign = 'left';
+      ctx.fillText(build.name || '未命名', PAD_X, 500);
       // 不增加 y，由后续bodyTop接管
       return false; // 不预留空间
     }
@@ -2098,8 +2098,8 @@ async function exportImages(build) {
     ctx.fillStyle = '#7c5fb6';
     ctx.font = `bold 38px "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textBaseline = 'middle';
-    ctx.textAlign = 'center';
-    ctx.fillText(build.name || '未命名', bx + bw / 2, by + bh / 2 + 2);
+    ctx.textAlign = 'left';
+    ctx.fillText(build.name || '未命名', bx, by + bh / 2 + 2);
     y += TITLE_BAR_H + TITLE_GAP;
     return true;
   }
@@ -2384,12 +2384,12 @@ async function exportImages(build) {
   ctx.fillStyle = 'rgba(255,255,255,0.92)';
   drawRoundedRect(ctx, titleBg.x, titleBg.y, titleBg.w, titleBg.h, 12);
   ctx.fill();
-  // 标题文字：水平居中 + 垂直居中于框
+  // 标题文字：左对齐 + 垂直居中于框
   ctx.fillStyle = '#7c5fb6';
   ctx.font = `bold 50px "PingFang SC", "Microsoft YaHei", sans-serif`;
   ctx.textBaseline = 'middle';
-  ctx.textAlign = 'center';
-  ctx.fillText(build.name || '未命名', titleBg.x + titleBg.w / 2, titleY + 2.5);
+  ctx.textAlign = 'left';
+  ctx.fillText(build.name || '未命名', titleBg.x, titleY + 2.5);
 
   // 绘制分区
   function renderSection(sec) {
