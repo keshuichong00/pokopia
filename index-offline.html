@@ -2205,22 +2205,23 @@ async function exportImages(build) {
       lastLineY = nameStartY + lineIdx * NAME_LINE_H;
       ctx.fillText(line, cx + CELL_W / 2, lastLineY);
     }
-    // 染色点：在名字最后一行后面（贴边防溢出）
+    // 染色标记：卡片左上角彩色圆点（白环+深色描边，醒目，与编辑器一致），不再压在文字末尾
     if (item.color && DYE_BY_ID[item.color]) {
       const dColor = DYE_BY_ID[item.color].color;
-      const dotR = 10;
-      const lastLineW = ctx.measureText(lastLineText).width;
-      const lastLineEndX = cx + CELL_W / 2 + lastLineW / 2;
-      let dotX = lastLineEndX + dotR + 5;
-      // 防止溢出 cell 右边
-      if (dotX + dotR > cx + CELL_W - 4) dotX = cx + CELL_W - dotR - 4;
-      const dotY = lastLineY + NAME_LINE_H / 2;
-      ctx.fillStyle = dColor;
-      ctx.strokeStyle = 'rgba(0,0,0,0.45)';
-      ctx.lineWidth = 1.5;
+      const dotR = 16;                       // 直径 32px，明显大于原 20px
+      const dotX = cx + dotR + 6, dotY = cy + dotR + 6;   // 左上角、距边 6px
+      // 白色外环：在任何图标底色上都跳出
+      ctx.beginPath();
+      ctx.arc(dotX, dotY, dotR + 2, 0, Math.PI * 2);
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+      // 染色色圆
       ctx.beginPath();
       ctx.arc(dotX, dotY, dotR, 0, Math.PI * 2);
+      ctx.fillStyle = dColor;
       ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+      ctx.lineWidth = 1.5;
       ctx.stroke();
     }
     // Qty（×N）：右上角白底圆角 chip，提升可读性（不压图标）
