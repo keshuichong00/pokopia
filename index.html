@@ -2104,19 +2104,19 @@ async function exportImages(build) {
     return true;
   }
 
-  // 计算分区头布局：多张预览图横向排列，badge 放右侧
-  // 无预览图时高度 = SEC_HEADER_H；有预览图时高度 = pvH（单张 400x260，多张按剩余宽度均分）
+  // 计算分区头布局：badge 在顶部左对齐，预览图在文案下方满宽横向排列
+  // 无预览图时高度 = SEC_BADGE_H；有预览图时高度 = SEC_BADGE_H + 间距 + pvH
   function calcSecHeaderLayout(sec) {
     const previews = secPreviews(sec).filter(pv => imgCache[pv]);
     const badgeText = '[ ' + (sec.title || '未命名') + ' ]';
     ctx.font = `bold ${SEC_TITLE_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
     const badgeW = Math.round(ctx.measureText(badgeText).width) + 64;
-    if (!previews.length) return { previews, badgeW, badgeText, cellW: 0, pvH: SEC_HEADER_H, gap: 12 };
+    if (!previews.length) return { previews, badgeW, badgeText, cellW: 0, pvH: SEC_BADGE_H, gap: 12 };
     const n = previews.length;
     const gap = 12;
-    // 预览图可用宽度 = 内容宽 - badge宽 - 边距；每张最大 400
-    const availW = CW - badgeW - 24;
-    let cellW = Math.min(280, Math.floor((availW - (n - 1) * gap) / n));
+    // 预览图移到文案下方：可用宽度 = 内容满宽；每张最大 400
+    const availW = CW;
+    let cellW = Math.min(400, Math.floor((availW - (n - 1) * gap) / n));
     cellW = Math.max(cellW, 110);           // 最小宽度保护
     const pvH = Math.round(cellW * 0.65);   // 与单张 400x260 比例一致
     return { previews, badgeW, badgeText, cellW, pvH, gap };
@@ -2125,33 +2125,32 @@ async function exportImages(build) {
   function drawSectionHeader(sec, trailGap = 24) {
     const sx = PAD_X, sy = y;
     const lay = calcSecHeaderLayout(sec);
-    let badgeX = sx;
-    if (lay.previews.length) {
-      let px = sx;
-      lay.previews.forEach(pv => {
-        // 圆角裁切（无边框）
-        ctx.save();
-        drawRoundedRect(ctx, px, sy, lay.cellW, lay.pvH, 8);
-        ctx.clip();
-        drawImageContain(ctx, imgCache[pv], px, sy, lay.cellW, lay.pvH);
-        ctx.restore();
-        px += lay.cellW + lay.gap;
-      });
-      badgeX = sx + lay.previews.length * lay.cellW + (lay.previews.length - 1) * lay.gap + 16;
-    }
+    // 分区文案（badge）始终在顶部左对齐
     const bw = lay.badgeW;
-    // 分区文字和图片水平居中对齐
-    const badgeY = lay.previews.length
-      ? sy + Math.round((lay.pvH - SEC_BADGE_H) / 2)
-      : sy;
-    drawRoundedRect(ctx, badgeX, badgeY, bw, SEC_BADGE_H, 12);
+    drawRoundedRect(ctx, sx, sy, bw, SEC_BADGE_H, 12);
     ctx.fillStyle = '#7c5fb6';
     ctx.fill();
     ctx.fillStyle = '#fff';
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'center';
-    ctx.fillText(lay.badgeText, badgeX + bw / 2, badgeY + SEC_BADGE_H / 2 + 2.5);
-    y += (lay.previews.length ? lay.pvH : SEC_HEADER_H) + trailGap;   // 预览图与下方内容间距（道具分区24，自由页10）
+    ctx.fillText(lay.badgeText, sx + bw / 2, sy + SEC_BADGE_H / 2 + 2.5);
+    let headerH = SEC_BADGE_H;
+    // 预览图移到文案下方（满宽横向排列，单张上限 400）
+    if (lay.previews.length) {
+      const pgap = 16;
+      let px = sx;
+      const py = sy + SEC_BADGE_H + pgap;
+      lay.previews.forEach(pv => {
+        ctx.save();
+        drawRoundedRect(ctx, px, py, lay.cellW, lay.pvH, 8);
+        ctx.clip();
+        drawImageContain(ctx, imgCache[pv], px, py, lay.cellW, lay.pvH);
+        ctx.restore();
+        px += lay.cellW + lay.gap;
+      });
+      headerH += pgap + lay.pvH;
+    }
+    y += headerH + trailGap;
   }
 
   function drawItemCell(item, col) {
@@ -2305,7 +2304,7 @@ async function exportImages(build) {
     ctx.textAlign = 'left';
     let ty = ny + 20;
     for (const ln of lines) {
-      if (ln) ctx.fillText(ln, nx + 24, ty); // 空行不绘制，仅占位保留换行
+      if (ln) ctx.fillText(ln, nx, ty); // 空行不绘制，仅占位保留换行；文字与边框左对齐
       ty += NOTES_LINE_H;
     }
     y = ny + nh + 10;
@@ -2468,7 +2467,7 @@ async function exportImages(build) {
       ctx.lineWidth = 3;
       ctx.stroke();
       ctx.fillStyle = '#fff';
-      ctx.font = `bold ${markerFont}px "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.font = `${markerFont}px "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.lineJoin = 'round';
@@ -2510,16 +2509,17 @@ async function exportImages(build) {
         let cy = ny + 16;
         noteItems.forEach((it, i) => {
           const itemH = itemHeights[i];
-          // Number circle
+          // Number circle（与首行文字垂直居中对齐）
+          const numCY = cy + 6 + 24;        // 首行文字(48px)视觉中心
           ctx.fillStyle = '#7c5fb6';
           ctx.beginPath();
-          ctx.arc(nx + 32, cy + 16, 20, 0, Math.PI * 2);
+          ctx.arc(nx + 32, numCY, 20, 0, Math.PI * 2);
           ctx.fill();
           ctx.fillStyle = '#fff';
           ctx.font = `bold 30px "PingFang SC", "Microsoft YaHei", sans-serif`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText(String(it.num), nx + 32, cy + 18);
+          ctx.fillText(String(it.num), nx + 32, numCY + 2);
           // Text
           ctx.fillStyle = '#2c2138';
           ctx.font = `${MARKER_NOTE_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
