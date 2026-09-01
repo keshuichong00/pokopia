@@ -2558,9 +2558,9 @@ async function exportImages(build) {
     }
     // 头像（单独，无橙色框）+ 白色包边
     if (hasAvatar) {
-      const ax = PAD_X, ay = oTop + WB, ar = AV / 2;
+      const ax = PAD_X + WB, ay = oTop + WB, ar = AV / 2;  // 与白圆同心，避免头像被裁切
       // 白色包边（实心圆，直径 = outerD）
-      cctx.fillStyle = '#ffffff';
+      cctx.fillStyle = '#7c5fb6';                     // 紫色包边（与项目主色一致）
       cctx.beginPath();
       cctx.arc(oCx, oCy, ar + WB, 0, Math.PI * 2);
       cctx.fill();
