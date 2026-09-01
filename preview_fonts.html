@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>字体改动预览</title>
+<style>
+  body{margin:0;background:#1c1c22;color:#eee;font-family:"PingFang SC","Microsoft YaHei",sans-serif;}
+  h1{text-align:center;font-size:18px;font-weight:600;margin:18px 0 4px;}
+  .sub{text-align:center;font-size:12px;color:#999;margin-bottom:16px;}
+  .wrap{display:flex;gap:28px;justify-content:center;padding:0 16px 28px;flex-wrap:wrap;}
+  .col{flex:0 0 auto;}
+  .col h2{text-align:center;font-size:15px;margin:0 0 8px;color:#cfc4e0;}
+  canvas{background:#fdf7f7;width:560px;height:auto;border:1px solid #444;border-radius:6px;box-shadow:0 6px 24px rgba(0,0,0,.45);}
+  .note{font-size:11px;color:#aaa;text-align:center;margin-top:8px;line-height:1.6;max-width:560px;}
+  .note b{color:#e7b3ff;}
+</style>
+</head>
+<body>
+<h1>导出图字体改动预览</h1>
+<div class="sub">左 = 当前线上版本　|　右 = 改后提议值（仅预览，未改真代码）</div>
+<div class="wrap">
+  <div class="col">
+    <h2>当前</h2>
+    <canvas id="old" width="1600" height="2848"></canvas>
+    <div class="note">分区徽章 <b>38px</b> 左对齐 · 图片编号 <b>22px</b> · 标注正文 <b>36px</b> · 列表编号 <b>18px</b> · 作者 <b>30px</b></div>
+  </div>
+  <div class="col">
+    <h2>改后（提议）</h2>
+    <canvas id="new" width="1600" height="2848"></canvas>
+    <div class="note">分区徽章 <b>40px</b> 左对齐 · 图片编号 <b>30px</b> · 标注正文 <b>38px</b> · 列表编号 <b>20px</b> · 作者 <b>36px</b></div>
+  </div>
+</div>
+<script>
+const W=1600,H=2848,CW=1460,PAD_X=70;
+const F=' "PingFang SC","Microsoft YaHei",sans-serif';
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+
+function drawSec(c,title,size,center,y){
+  const txt='[ '+title+' ]';
+  c.font='bold '+size+'px'+F;
+  const bw=Math.round(c.measureText(txt).width)+40;
+  const bh=44;
+  const bx = center ? PAD_X+(CW-bw)/2 : PAD_X;
+  c.fillStyle='#7c5fb6'; rr(c,bx,y,bw,bh,12); c.fill();
+  c.fillStyle='#fff'; c.textAlign='center'; c.textBaseline='middle';
+  c.fillText(txt, bx+bw/2, y+bh/2);
+  return y+bh;
+}
+
+function drawCell(c,cx,cy,name,qty){
+  const CELL_W=248,CELL_H=264;
+  c.fillStyle='#fff'; rr(c,cx,cy,CELL_W,CELL_H,12); c.fill();
+  c.strokeStyle='#ebe1f0'; c.lineWidth=2; c.stroke();
+  c.fillStyle='#d9d2e3'; rr(c,cx+44,cy+16,160,160,8); c.fill();
+  c.fillStyle='#2c2138'; c.font='36px'+F; c.textAlign='center'; c.textBaseline='top';
+  c.fillText(name, cx+CELL_W/2, cy+186);
+  if(qty>1){ c.fillStyle='#7c5fb6'; c.font='bold 26px'+F; c.textAlign='right'; c.textBaseline='top'; c.fillText('×'+qty, cx+CELL_W-12, cy+12); }
+}
+
+function sheet(c, mode){
+  const nw = mode==='new';
+  const SEC_TITLE = nw?40:38;
+  const SEC_CENTER = false;
+  const MARKER_F = nw?30:22;
+  const NOTE_TEXT = nw?38:36;
+  const NOTE_NUM = nw?20:18;
+  const AUTHOR_F = nw?36:30;
+  const NOTE_LH = 56;
+  // page bg
+  c.fillStyle='#fdf7f7'; c.fillRect(0,0,W,H);
+  // cover title box
+  const tY=500, tb={x:PAD_X,y:tY-55,w:CW,h:110};
+  c.fillStyle='rgba(255,255,255,0.92)'; rr(c,tb.x,tb.y,tb.w,tb.h,12); c.fill();
+  c.fillStyle='#7c5fb6'; c.font='bold 48px'+F; c.textBaseline='middle'; c.textAlign='left';
+  c.fillText('秋日庭院完整配方', tb.x+36, tY);
+  let y=620;
+  // section 1
+  y = drawSec(c,'主结构',SEC_TITLE,SEC_CENTER,y); y+=24;
+  const CELL_W=248, GAP=55;
+  const names=['暖炉石','星露装饰砖','庭院栅栏'];
+  const qty=[1,3,2];
+  for(let i=0;i<3;i++){ drawCell(c, PAD_X+i*(CELL_W+GAP), y, names[i], qty[i]); }
+  y+=264+48;
+  // section 2 (free page markers)
+  y = drawSec(c,'庭院装饰',SEC_TITLE,SEC_CENTER,y); y+=24;
+  const iw=600,ih=390,ix=PAD_X+(CW-iw)/2,iy=y;
+  c.fillStyle='#e9e2ef'; rr(c,ix,iy,iw,ih,10); c.fill();
+  const mx=ix+iw*0.42,my=iy+ih*0.42,mr=24;
+  c.fillStyle='#7c5fb6'; c.beginPath(); c.arc(mx,my,mr,0,7); c.fill();
+  c.strokeStyle='#fff'; c.lineWidth=3; c.stroke();
+  c.fillStyle='#fff'; c.font='bold '+MARKER_F+'px'+F; c.textAlign='center'; c.textBaseline='middle';
+  c.fillText('1', mx, my);
+  y=iy+ih+34;
+  const notes=['入口处放置暖炉石提升整体氛围','栅栏与砖块统一为暖色调，避免杂乱'];
+  notes.forEach((t,idx)=>{
+    const ny=y, cr=20, ccx=PAD_X+cr+6, ccy=ny+cr+4;
+    c.fillStyle='#7c5fb6'; c.beginPath(); c.arc(ccx,ccy,cr,0,7); c.fill();
+    c.fillStyle='#fff'; c.font='bold '+NOTE_NUM+'px'+F; c.textAlign='center'; c.textBaseline='middle';
+    c.fillText(String(idx+1), ccx, ccy);
+    c.fillStyle='#2c2138'; c.font=NOTE_TEXT+'px'+F; c.textAlign='left'; c.textBaseline='top';
+    c.fillText(t, PAD_X+cr*2+22, ny+2);
+    y+=NOTE_LH;
+  });
+  // author block (bottom-left, every page)
+  const atext='@瞌睡虫';
+  c.font='bold '+AUTHOR_F+'px'+F;
+  const tw=c.measureText(atext).width, bw=tw+56, bh=56, bx=PAD_X, by=H-bh-20;
+  c.fillStyle='#ff8a3d'; rr(c,bx,by,bw,bh,14); c.fill();
+  c.fillStyle='#fff'; c.textAlign='center'; c.textBaseline='middle';
+  c.fillText(atext, bx+bw/2, by+bh/2+1);
+}
+
+sheet(document.getElementById('old').getContext('2d'),'old');
+sheet(document.getElementById('new').getContext('2d'),'new');
+</script>
+</body>
+</html>

@@ -269,25 +269,15 @@
   }
   .cover-uploader img { width: 100%; height: 100%; object-fit: cover; }
   .cover-uploader:hover { background: var(--primary); color: white; }
-  .avatar-uploader {
-    width: 64px; height: 64px; border-radius: 50%;
-    background: var(--primary-light);
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; overflow: hidden; position: relative;
-    color: var(--primary-dark); font-size: 12px; border: 2px solid var(--border);
-  }
-  .avatar-uploader img { width: 100%; height: 100%; object-fit: cover; }
-  .avatar-uploader:hover { background: var(--primary); color: white; }
 
   .section-card {
     background: var(--card);
     border: 1px solid var(--border);
-    border-top: 2px dashed #c4b5e6;       /* 分区之间虚线分割（导出虚线的弱化版） */
     border-radius: var(--radius);
-    padding: 18px;
-    margin-bottom: 28px;
+    padding: 16px;
+    margin-bottom: 12px;
   }
-  .section-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+  .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
   .section-title-input {
     flex: 1;
     font-size: 16px; font-weight: 600;
@@ -297,27 +287,16 @@
     background: transparent;
   }
   .section-title-input:focus { outline: none; border-color: var(--primary); background: white; }
-  .section-previews { display: flex; flex-wrap: wrap; gap: 8px; }
   .section-preview {
-    width: 140px; height: 93px;            /* 3:2 比例，与导出预览图比例一致 */
+    width: 60px; height: 60px;
     background: var(--primary-light);
     border-radius: var(--radius-sm);
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; overflow: hidden; font-size: 11px; color: var(--text-light);
     flex-shrink: 0;
-    position: relative;
   }
   .section-preview img { width: 100%; height: 100%; object-fit: cover; }
   .section-preview:hover { background: var(--primary); color: white; }
-  .section-preview.add { border: 1.5px dashed var(--primary); background: var(--primary-light); color: var(--primary); font-size: 22px; }
-  .section-preview.add:hover { background: var(--primary); color: white; }
-  .preview-del {
-    position: absolute; top: 3px; right: 3px; width: 20px; height: 20px;
-    border-radius: 50%; background: rgba(0,0,0,0.55); color: #fff;
-    font-size: 13px; line-height: 20px; text-align: center; cursor: pointer;
-    user-select: none;
-  }
-  .preview-del:hover { background: #c44; }
 
   .item-grid {
     display: grid;
@@ -325,31 +304,6 @@
     gap: 8px;
   }
   @media (max-width: 768px) { .item-grid { grid-template-columns: repeat(4, 1fr); } }
-
-  /* ===== 移动端适配（手机窄屏） ===== */
-  @media (max-width: 768px) {
-    .topbar { padding: 10px 12px; gap: 10px; }
-    .topbar .logo { font-size: 15px; }
-    .topbar .logo-icon { font-size: 18px; }
-    .topbar .crumb { display: none; }              /* 手机隐藏面包屑，避免挤压操作区 */
-    .topbar .actions { flex-wrap: wrap; }
-    .container { padding: 12px; }
-    .editor-panel { padding: 14px; }
-    .section-card { padding: 14px; margin-bottom: 18px; }
-    .editor-row { gap: 8px; }
-    .editor-row input[type="text"] { min-width: 0; width: 100%; }  /* 输入框占满整行，label 自动换行到上方 */
-    .modal { max-height: 92vh; }
-    .modal-header { flex-wrap: wrap; }
-    .modal-header .search-box { flex: 1 1 100%; order: 3; }          /* 搜索框在手机占满整行 */
-    .btn { padding: 10px 16px; min-height: 40px; }                  /* 触控友好最小高度 */
-  }
-  @media (max-width: 480px) {
-    .topbar .logo { font-size: 14px; }
-    .build-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
-    .item-grid { grid-template-columns: repeat(3, 1fr); }
-    .section-preview { width: 100px; height: 67px; }
-    .cover-uploader { width: 120px; height: 90px; }
-  }
   .item-cell {
     background: white;
     border: 1px solid var(--border);
@@ -409,217 +363,6 @@
     min-height: 90px;
   }
   .item-cell .item-add-slot:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
-
-  /* ===== Free Page (自由页面) ===== */
-  .free-section-controls {
-    display: flex; gap: 8px; margin-bottom: 12px;
-    flex-wrap: wrap;
-  }
-  .free-stage {
-    position: relative;
-    width: 100%;
-    max-width: 900px;
-    margin: 0 auto;
-    background: repeating-linear-gradient(45deg, #f0e8f4, #f0e8f4 10px, #f7f1fa 10px, #f7f1fa 20px);
-    border: 2px dashed var(--primary);
-    border-radius: 8px;
-    overflow: hidden;
-    user-select: none;
-  }
-  .free-stage.empty {
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    color: var(--primary);
-    font-size: 16px;
-    padding: 60px 20px;
-    text-align: center;
-  }
-  .free-stage.empty:hover { background: var(--primary-light); }
-  .free-image {
-    position: absolute;
-    cursor: move;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-    border: 2px solid var(--primary);
-    background: white;
-  }
-  .free-image img {
-    width: 100%; height: 100%;
-    pointer-events: none;
-    display: block;
-  }
-  .free-resize-handle {
-    position: absolute;
-    width: 14px; height: 14px;
-    background: var(--primary);
-    border: 2px solid white;
-    border-radius: 50%;
-    cursor: nwse-resize;
-    z-index: 10;
-  }
-  .free-resize-handle.br { right: -7px; bottom: -7px; }
-  .free-marker {
-    position: absolute;
-    width: 32px; height: 32px;
-    background: var(--primary);
-    color: white;
-    border: 3px solid white;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14px; font-weight: 700;
-    cursor: pointer;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    z-index: 5;
-  }
-  .free-marker:hover { transform: translate(-50%, -50%) scale(1.15); }
-  .free-marker.selected { background: #e91e63; }
-  .free-marker-hint {
-    position: absolute;
-    bottom: 8px; left: 8px;
-    background: rgba(124, 95, 182, 0.9);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    pointer-events: none;
-    z-index: 1;
-  }
-  .free-markers-list {
-    margin-top: 16px;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-  .free-marker-item {
-    display: flex; gap: 10px; align-items: flex-start;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px;
-  }
-  .free-marker-item .num {
-    flex-shrink: 0;
-    width: 32px; height: 32px;
-    background: var(--primary);
-    color: white;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700;
-    margin-top: 2px;
-  }
-  .free-marker-item textarea {
-    flex: 1;
-    border: none;
-    background: transparent;
-    resize: vertical;
-    min-height: 36px;
-    font-size: 14px;
-    font-family: inherit;
-    padding: 6px;
-  }
-  .free-marker-item textarea:focus { outline: 1px solid var(--primary); border-radius: 4px; }
-  .free-marker-item .del {
-    flex-shrink: 0;
-    width: 28px; height: 28px;
-    background: transparent;
-    border: none;
-    color: #c44;
-    cursor: pointer;
-    font-size: 18px;
-    border-radius: 4px;
-  }
-  .free-marker-item .del:hover { background: #fee; }
-  .free-section-type-badge {
-    display: inline-block;
-    background: var(--primary);
-    color: white;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    margin-left: 8px;
-    font-weight: 500;
-  }
-  .add-section-dropdown {
-    position: relative;
-    margin-top: 12px;
-  }
-  .add-section-dropdown .menu {
-    position: absolute;
-    bottom: 100%;
-    left: 0; right: 0;
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    margin-bottom: 4px;
-    z-index: 10;
-    overflow: hidden;
-  }
-  .add-section-dropdown .menu button {
-    width: 100%;
-    padding: 12px 16px;
-    background: white;
-    border: none;
-    border-bottom: 1px solid var(--border);
-    text-align: left;
-    font-size: 14px;
-    cursor: pointer;
-  }
-  .add-section-dropdown .menu button:last-child { border-bottom: none; }
-  .add-section-dropdown .menu button:hover { background: var(--primary-light); }
-
-  /* Free page viewer */
-  .viewer-free-stage {
-    position: relative;
-    width: 100%;
-    max-width: 800px;
-    margin: 16px auto;
-    background: #f7f1fa;
-    border-radius: 8px;
-    overflow: hidden;
-  }
-  .viewer-free-image {
-    position: absolute;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-    border: 2px solid var(--primary);
-  }
-  .viewer-free-image img { width: 100%; height: 100%; display: block; }
-  .viewer-free-marker {
-    position: absolute;
-    width: 30px; height: 30px;
-    background: var(--primary);
-    color: white;
-    border: 2px solid white;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 13px; font-weight: 700;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-  }
-  .viewer-free-notes {
-    max-width: 800px;
-    margin: 16px auto;
-    display: grid;
-    gap: 10px;
-  }
-  .viewer-free-note-item {
-    display: flex; gap: 10px; align-items: flex-start;
-    padding: 10px;
-    background: #faf5fc;
-    border-left: 4px solid var(--primary);
-    border-radius: 4px;
-  }
-  .viewer-free-note-item .num {
-    flex-shrink: 0;
-    width: 28px; height: 28px;
-    background: var(--primary);
-    color: white;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700;
-    font-size: 13px;
-  }
-  .viewer-free-note-item .text { flex: 1; line-height: 1.6; white-space: pre-wrap; }
 
   /* ===== Item Picker Modal ===== */
   .modal-overlay {
@@ -724,7 +467,6 @@
     font-size: 24px; color: var(--primary);
   }
   .viewer-section-preview img { width: 100%; height: 100%; object-fit: cover; }
-  .viewer-section-previews { display: flex; flex-wrap: wrap; gap: 8px; }
   .viewer-section-title {
     background: var(--primary); color: white;
     padding: 4px 12px; border-radius: 6px;
@@ -833,8 +575,6 @@ const ITEMS_RAW = /*#__INLINE_ITEMS__*/null;
 // 导出图片背景附件 (附件1: 第一张; 附件2: 第二张及续页)
 const BG1 = /*#__INLINE_BG1__*/'';
 const BG2 = /*#__INLINE_BG2__*/'';
-// Pokemon Pokopia 游戏 logo (叠加在封面图左上角)
-const LOGO = /*#__INLINE_LOGO__*/'';
 
 const CATEGORY_ZH = {
   'Buildings': '建筑', 'Furniture': '家具', 'Utilities': '功能',
@@ -950,17 +690,6 @@ function customConfirm(message) {
 function totalItems(b) {
   return (b.sections || []).reduce((s, sec) => s + (sec.items || []).length, 0);
 }
-// 分区预览图：新数据 sec.previews 数组，兼容旧单图 sec.preview
-function secPreviews(sec) {
-  if (!sec) return [];
-  const arr = Array.isArray(sec.previews) ? sec.previews.filter(Boolean) : [];
-  if (arr.length) return arr;
-  return sec.preview ? [sec.preview] : [];
-}
-function setSecPreviews(sec, arr) {
-  sec.previews = (arr || []).filter(Boolean);
-  delete sec.preview;
-}
 
 // ===== Router =====
 function navigate(route, params = {}) {
@@ -1072,7 +801,6 @@ function createNewBuild() {
       id: genId(),
       name: '新材料单',
       author: '',
-      avatar: '',
       cover: '',
       sections: [{ title: '分区 1', preview: '', items: [], notes: '' }],
       notes: '', // 全局备注（在所有分区下方）
@@ -1090,7 +818,7 @@ function editBuild(id) {
 function saveDraft() {
   const b = state.draftBuild;
   if (!b) return;
-  if (!b.name?.trim()) { toast('请填写说明'); return; }
+  if (!b.name?.trim()) { toast('请填写材料单名称'); return; }
   b.updatedAt = Date.now();
   state.builds[b.id] = b;
   saveBuilds(state.builds);
@@ -1138,28 +866,13 @@ function renderEditor(app) {
   // 基本信息面板
   const infoPanel = el('div', { class: 'editor-panel' });
   infoPanel.appendChild(el('div', { class: 'editor-row' },
-    el('label', {}, '说明'),
+    el('label', {}, '名称'),
     el('input', { type: 'text', value: b.name || '', oninput: e => b.name = e.target.value, placeholder: '如：露营车' }),
   ));
   infoPanel.appendChild(el('div', { class: 'editor-row' },
     el('label', {}, '作者'),
     el('input', { type: 'text', value: b.author || '', oninput: e => b.author = e.target.value, placeholder: '如：瞌睡虫' }),
   ));
-  // 作者头像上传（圆形）
-  const avatarRow = el('div', { class: 'editor-row' });
-  avatarRow.appendChild(el('label', {}, '作者头像'));
-  const avatarEl = el('div', { class: 'avatar-uploader' });
-  if (b.avatar) {
-    avatarEl.appendChild(el('img', { src: b.avatar }));
-  } else {
-    avatarEl.appendChild(document.createTextNode('点击上传'));
-  }
-  avatarEl.onclick = () => uploadImage(dataUrl => { b.avatar = dataUrl; render(); });
-  avatarRow.appendChild(avatarEl);
-  if (b.avatar) {
-    avatarRow.appendChild(el('button', { class: 'btn btn-sm btn-ghost', onclick: () => { b.avatar = ''; render(); } }, '移除头像'));
-  }
-  infoPanel.appendChild(avatarRow);
   const coverRow = el('div', { class: 'editor-row' });
   coverRow.appendChild(el('label', {}, '封面图'));
   const coverEl = el('div', { class: 'cover-uploader' });
@@ -1178,50 +891,18 @@ function renderEditor(app) {
 
   // 分区列表
   (b.sections || []).forEach((sec, sIdx) => {
-    if (sec.type === 'free') {
-      app.appendChild(renderFreePageEditor(b, sec, sIdx));
-    } else {
-      app.appendChild(renderSectionEditor(b, sec, sIdx));
-    }
+    app.appendChild(renderSectionEditor(b, sec, sIdx));
   });
 
-  // 添加分区按钮（下拉选择普通/自由）
-  const dropdown = el('div', { class: 'add-section-dropdown' });
-  const addBtn = el('button', {
+  // 添加分区按钮
+  app.appendChild(el('button', {
     class: 'btn btn-secondary btn-lg',
-    style: { width: '100%' },
-    onclick: e => {
-      e.stopPropagation();
-      const existing = document.querySelector('.add-section-menu');
-      if (existing) { existing.remove(); return; }
-      const menu = el('div', { class: 'add-section-menu menu', onclick: e => e.stopPropagation() });
-      menu.appendChild(el('button', {
-        onclick: () => {
-          b.sections.push({ title: `分区 ${b.sections.length + 1}`, preview: '', items: [], notes: '' });
-          menu.remove();
-          render();
-        }
-      }, '📦 新建普通分区（道具列表）'));
-      menu.appendChild(el('button', {
-        onclick: () => {
-          b.sections.push({
-            title: `自由页面 ${(b.sections.filter(s => s.type === 'free').length || 0) + 1}`,
-            type: 'free',
-            freePage: null,
-            markers: [],
-            notes: ''
-          });
-          menu.remove();
-          render();
-        }
-      }, '✏️ 新建自由页面（图片+标记）'));
-      addBtn.parentElement.appendChild(menu);
-      const closeOnClick = () => { menu.remove(); document.removeEventListener('click', closeOnClick); };
-      setTimeout(() => document.addEventListener('click', closeOnClick), 0);
+    style: { width: '100%', marginTop: '12px' },
+    onclick: () => {
+      b.sections.push({ title: `分区 ${b.sections.length + 1}`, preview: '', items: [], notes: '' });
+      render();
     }
-  }, '＋ 新建分区 ▾');
-  dropdown.appendChild(addBtn);
-  app.appendChild(dropdown);
+  }, '＋ 新建分区'));
 
   // 自由文字输入区（所有图片下方，导出时若为空则不显示）
   const notesPanel = el('div', { class: 'editor-panel', style: { marginTop: '20px' } });
@@ -1247,33 +928,14 @@ function renderSectionEditor(b, sec, sIdx) {
   const header = el('div', { class: 'section-header' });
   const titleInput = el('input', { type: 'text', class: 'section-title-input', value: sec.title || '', placeholder: '分区名', oninput: e => sec.title = e.target.value });
   header.appendChild(titleInput);
-  // 多张分区预览图（可增删替换）
-  const pvWrap = el('div', { class: 'section-previews' });
-  secPreviews(sec).forEach((url, i) => {
-    const pv = el('div', { class: 'section-preview', title: '点击替换这张预览图' });
-    pv.appendChild(el('img', { src: url }));
-    pv.appendChild(el('div', {
-      class: 'preview-del', title: '删除这张',
-      onclick: e => {
-        e.stopPropagation();
-        const ps = secPreviews(sec); ps.splice(i, 1);
-        setSecPreviews(sec, ps); render();
-      }
-    }, '×'));
-    pv.onclick = () => uploadImage(dataUrl => {
-      const ps = secPreviews(sec); ps[i] = dataUrl;
-      setSecPreviews(sec, ps); render();
-    });
-    pvWrap.appendChild(pv);
-  });
-  pvWrap.appendChild(el('div', {
-    class: 'section-preview add', title: '添加预览图（可多张）',
-    onclick: () => uploadImage(dataUrl => {
-      const ps = secPreviews(sec); ps.push(dataUrl);
-      setSecPreviews(sec, ps); render();
-    })
-  }, '＋'));
-  header.appendChild(pvWrap);
+  const preview = el('div', { class: 'section-preview', title: '点击上传分区预览图' });
+  if (sec.preview) preview.appendChild(el('img', { src: sec.preview }));
+  else preview.appendChild(document.createTextNode('预览'));
+  preview.onclick = () => uploadImage(dataUrl => { sec.preview = dataUrl; render(); });
+  header.appendChild(preview);
+  if (sec.preview) {
+    header.appendChild(el('button', { class: 'btn-icon btn-ghost', onclick: () => { sec.preview = ''; render(); } }, '🗑️'));
+  }
   header.appendChild(el('button', { class: 'btn-icon btn-ghost', title: '上移', onclick: () => moveSection(b, sIdx, -1) }, '↑'));
   header.appendChild(el('button', { class: 'btn-icon btn-ghost', title: '下移', onclick: () => moveSection(b, sIdx, 1) }, '↓'));
   header.appendChild(el('button', { class: 'btn-icon btn-danger', title: '删除分区', onclick: async () => {
@@ -1353,270 +1015,6 @@ function moveSection(b, idx, dir) {
   if (newIdx < 0 || newIdx >= b.sections.length) return;
   [b.sections[idx], b.sections[newIdx]] = [b.sections[newIdx], b.sections[idx]];
   render();
-}
-
-// ===== Free Page Editor =====
-function renderFreePageEditor(b, sec, sIdx) {
-  const card = el('div', { class: 'section-card' });
-  // Header (similar to normal section, but with type badge)
-  const header = el('div', { class: 'section-header' });
-  const titleInput = el('input', { type: 'text', class: 'section-title-input', value: sec.title || '', placeholder: '自由页面名', oninput: e => sec.title = e.target.value });
-  header.appendChild(titleInput);
-  const badge = el('span', { class: 'free-section-type-badge' }, '✏️ 自由页面');
-  header.appendChild(badge);
-  header.appendChild(el('button', { class: 'btn-icon btn-ghost', title: '上移', onclick: () => moveSection(b, sIdx, -1) }, '↑'));
-  header.appendChild(el('button', { class: 'btn-icon btn-ghost', title: '下移', onclick: () => moveSection(b, sIdx, 1) }, '↓'));
-  header.appendChild(el('button', { class: 'btn-icon btn-danger', title: '删除分区', onclick: async () => {
-    if (await customConfirm('删除此自由页面？')) {
-      b.sections.splice(sIdx, 1);
-      if (b.sections.length === 0) b.sections.push({ title: '分区 1', preview: '', items: [], notes: '' });
-      render();
-    }
-  } }, '✕'));
-  card.appendChild(header);
-
-  // Stage
-  const stage = el('div', { class: 'free-stage' + (sec.freePage ? '' : ' empty') });
-  // Set aspect ratio based on image
-  if (sec.freePage) {
-    // Compute stage aspect: maintain image aspect, but allow some default if no image
-    stage.style.paddingBottom = '0';
-  }
-
-  if (!sec.freePage) {
-    stage.appendChild(el('div', {}, '📷 点击上传图片\n（支持自由拖动、缩放、打标记）'));
-    stage.onclick = () => {
-      uploadImage(dataUrl => {
-        const img = new Image();
-        img.onload = () => {
-          sec.freePage = {
-            image: dataUrl,
-            imgW: img.naturalWidth,
-            imgH: img.naturalHeight,
-            // Default: image occupies 80% of stage, centered
-            x: 10, y: 10, w: 80, h: 80 * (img.naturalHeight / img.naturalWidth),
-          };
-          render();
-        };
-        img.src = dataUrl;
-      });
-    };
-  } else {
-    // Image element
-    const fp = sec.freePage;
-    const imgEl = el('div', { class: 'free-image' });
-    imgEl.style.left = fp.x + '%';
-    imgEl.style.top = fp.y + '%';
-    imgEl.style.width = fp.w + '%';
-    imgEl.style.height = fp.h + '%';
-    imgEl.appendChild(el('img', { src: fp.image, alt: '自由页面' }));
-    // Markers (drawn relative to stage)
-    (sec.markers || []).forEach((mk, mkIdx) => {
-      const marker = el('div', { class: 'free-marker' }, String(mkIdx + 1));
-      marker.style.left = mk.rx * 100 + '%';
-      marker.style.top = mk.ry * 100 + '%';
-      marker.title = mk.note || '点击查看/编辑说明';
-      marker.onclick = e => {
-        e.stopPropagation();
-        // Focus textarea for this marker
-        const list = card.querySelector('.free-markers-list');
-        if (list) {
-          const tas = list.querySelectorAll('textarea');
-          if (tas[mkIdx]) tas[mkIdx].focus();
-        }
-      };
-      imgEl.appendChild(marker); // attach to image so it moves with it
-    });
-    // Wait - markers should be relative to image, not stage. Let's recalculate
-    // Actually if markers are relative to image bounds, when image moves, markers move with it
-    // Image bounds in stage: x to x+w, y to y+h
-    // Marker position in stage: x + rx*w, y + ry*h
-    // So I need to place markers on stage, not on image element
-    // Let me restructure: clear image of markers, add to stage
-  }
-
-  if (sec.freePage) {
-    // Re-render: image + markers on stage
-    const fp = sec.freePage;
-    // 修复旧数据：强制按原图宽高比矫正（曾因拖拽变形保存的 h）
-    if (fp.imgW && fp.imgH && fp.w) {
-      fp.h = fp.w * (fp.imgH / fp.imgW);
-    }
-    // Fixed stage width 800px (matches viewer)
-    const STAGE_W = 800;
-    const stageH = Math.round(STAGE_W * (fp.y + fp.h) / 100 + 40);
-    stage.style.width = STAGE_W + 'px';
-    stage.style.maxWidth = '100%';
-    stage.style.height = stageH + 'px';
-    const imgEl = el('div', { class: 'free-image' });
-    const imgLeftPx = fp.x / 100 * STAGE_W;
-    const imgTopPx = fp.y / 100 * STAGE_W;
-    const imgWidthPx = fp.w / 100 * STAGE_W;
-    const imgHeightPx = fp.h / 100 * STAGE_W;
-    imgEl.style.left = imgLeftPx + 'px';
-    imgEl.style.top = imgTopPx + 'px';
-    imgEl.style.width = imgWidthPx + 'px';
-    imgEl.style.height = imgHeightPx + 'px';
-    imgEl.appendChild(el('img', { src: fp.image, alt: '自由页面' }));
-    // Resize handle
-    const handle = el('div', { class: 'free-resize-handle br' });
-    imgEl.appendChild(handle);
-    stage.appendChild(imgEl);
-
-    // Markers on stage (positioned using image bounds)
-    (sec.markers || []).forEach((mk, mkIdx) => {
-      const marker = el('div', { class: 'free-marker' }, String(mkIdx + 1));
-      marker.style.left = (imgLeftPx + mk.rx * imgWidthPx) + 'px';
-      marker.style.top = (imgTopPx + mk.ry * imgHeightPx) + 'px';
-      marker.title = mk.note || '点击编辑说明';
-      marker.onclick = e => {
-        e.stopPropagation();
-        const tas = card.querySelectorAll('.free-marker-item textarea');
-        if (tas[mkIdx]) tas[mkIdx].focus();
-      };
-      stage.appendChild(marker);
-    });
-
-    // Hint at bottom
-    stage.appendChild(el('div', { class: 'free-marker-hint' }, '点击图片添加标记 · 拖动图片改变位置 · 拖右下角改变大小'));
-
-    // === Drag to move image ===
-    let dragMode = null; // 'move' | 'resize' | null
-    let dragStart = null;
-    const onMove = e => {
-      if (!dragMode) return;
-      const rect = stage.getBoundingClientRect();
-      // x/y/w/h 均以 stage 宽度为基准的百分比，dx/dy 统一除以宽度
-      const dx = (e.clientX - dragStart.x) / rect.width * 100;
-      const dy = (e.clientY - dragStart.y) / rect.width * 100;
-      if (dragMode === 'move') {
-        fp.x = Math.max(0, Math.min(100 - fp.w, dragStart.fpX + dx));
-        fp.y = Math.max(0, Math.min(100 - fp.h, dragStart.fpY + dy));
-      } else if (dragMode === 'resize') {
-        // 锁定宽高比：以横向拖动为准，h 始终 = w * (imgH/imgW)
-        let nw = Math.max(10, Math.min(100 - fp.x, dragStart.fpW + dx));
-        let nh = nw * (fp.imgH / fp.imgW);
-        if (fp.y + nh > 100) { nh = 100 - fp.y; nw = nh * (fp.imgW / fp.imgH); }
-        fp.w = nw;
-        fp.h = nh;
-      }
-      // Re-render entirely (simpler than partial update)
-      render();
-    };
-    const onUp = () => { dragMode = null; document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
-    imgEl.addEventListener('mousedown', e => {
-      if (e.target === handle) return;
-      dragMode = 'move';
-      dragStart = { x: e.clientX, y: e.clientY, fpX: fp.x, fpY: fp.y, fpW: fp.w, fpH: fp.h };
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
-      e.preventDefault();
-    });
-    handle.addEventListener('mousedown', e => {
-      dragMode = 'resize';
-      dragStart = { x: e.clientX, y: e.clientY, fpX: fp.x, fpY: fp.y, fpW: fp.w, fpH: fp.h };
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
-      e.preventDefault();
-      e.stopPropagation();
-    });
-
-    // === Click to add marker ===
-    stage.addEventListener('click', e => {
-      // Ignore clicks on existing markers, resize handle
-      if (e.target.classList.contains('free-marker') || 
-          e.target.classList.contains('free-resize-handle')) return;
-      // Get click position relative to stage
-      const rect = stage.getBoundingClientRect();
-      const clickX = (e.clientX - rect.left) / rect.width;
-      const clickY = (e.clientY - rect.top) / rect.height;
-      // Check if click is within image bounds (in 0-1 range)
-      const imgX1 = fp.x / 100, imgY1 = fp.y / 100;
-      const imgX2 = (fp.x + fp.w) / 100, imgY2 = (fp.y + fp.h) / 100;
-      if (clickX < imgX1 || clickX > imgX2 || clickY < imgY1 || clickY > imgY2) return;
-      // Compute rx, ry relative to image
-      const rx = (clickX - imgX1) / (imgX2 - imgX1);
-      const ry = (clickY - imgY1) / (imgY2 - imgY1);
-      sec.markers = sec.markers || [];
-      sec.markers.push({ rx, ry, note: '' });
-      render();
-      // Focus the new marker's textarea after re-render
-      setTimeout(() => {
-        const tas = document.querySelectorAll('.free-marker-item textarea');
-        if (tas[sec.markers.length - 1]) tas[sec.markers.length - 1].focus();
-      }, 100);
-    });
-  }
-
-  card.appendChild(stage);
-
-  // Controls below stage
-  if (sec.freePage) {
-    const controls = el('div', { class: 'free-section-controls' });
-    controls.appendChild(el('button', {
-      class: 'btn btn-sm btn-secondary',
-      onclick: () => {
-        uploadImage(dataUrl => {
-          const img = new Image();
-          img.onload = () => {
-            sec.freePage = { image: dataUrl, imgW: img.naturalWidth, imgH: img.naturalHeight, x: 10, y: 10, w: 80, h: 80 * (img.naturalHeight / img.naturalWidth) };
-            sec.markers = [];
-            render();
-          };
-          img.src = dataUrl;
-        });
-      }
-    }, '🔄 更换图片'));
-    controls.appendChild(el('button', {
-      class: 'btn btn-sm btn-ghost',
-      onclick: () => {
-        if (sec.freePage) {
-          sec.freePage = null;
-          sec.markers = [];
-          render();
-        }
-      }
-    }, '🗑️ 移除图片'));
-    card.appendChild(controls);
-  }
-
-  // Marker notes list
-  if (sec.freePage && (sec.markers || []).length > 0) {
-    const list = el('div', { class: 'free-markers-list' });
-    (sec.markers || []).forEach((mk, mkIdx) => {
-      const item = el('div', { class: 'free-marker-item' });
-      item.appendChild(el('div', { class: 'num' }, String(mkIdx + 1)));
-      const ta = el('textarea', {
-        placeholder: '针对此标记的说明文字...',
-        oninput: e => mk.note = e.target.value,
-      });
-      ta.value = mk.note || '';
-      item.appendChild(ta);
-      item.appendChild(el('button', {
-        class: 'del',
-        title: '删除标记',
-        onclick: () => {
-          sec.markers.splice(mkIdx, 1);
-          render();
-        }
-      }, '×'));
-      list.appendChild(item);
-    });
-    card.appendChild(list);
-  }
-
-  // 分区备注（自由页面也支持）
-  card.appendChild(el('div', { class: 'editor-row', style: { marginTop: '12px' } },
-    el('label', {}, '备注'),
-    el('div', { style: { flex: 1 } },
-      el('textarea', {
-        style: { width: '100%', minHeight: '60px', padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '14px', fontFamily: 'inherit', resize: 'vertical' },
-        placeholder: '此自由页面的备注（可选）',
-        oninput: e => sec.notes = e.target.value,
-      }, sec.notes || '')
-    )
-  ));
-  return card;
 }
 
 // ===== 染色选择器 =====
@@ -1716,8 +1114,13 @@ function renderPickerGrid() {
     cell.appendChild(el('div', { class: 'picker-name' }, it.nameZh));
     cell.onclick = () => {
       const sec = state.draftBuild.sections[state.pickerTarget];
-      // 允许重复添加：每次选择都新增一个独立实例（独立格子）
-      sec.items.push({ id: it.id, qty: 1 });
+      // 检查是否已存在
+      const exist = sec.items.find(x => x.id === it.id);
+      if (exist) {
+        exist.qty = (exist.qty || 1) + 1;
+      } else {
+        sec.items.push({ id: it.id, qty: 1 });
+      }
       $('#pickerModal').classList.remove('open');
       render();
       toast('已加入：' + it.nameZh);
@@ -1773,36 +1176,22 @@ function renderViewer(app) {
   const body = el('div', { class: 'viewer-body' });
   (b.sections || []).forEach((sec, idx) => {
     if (idx > 0) body.appendChild(el('div', { class: 'viewer-section-divider' }));
-    if (sec.type === 'free') {
-      body.appendChild(renderFreePageViewer(sec));
-    } else {
-      const s = el('div', { class: 'viewer-section' });
-      const sh = el('div', { class: 'viewer-section-header' });
-      const pvs = secPreviews(sec);
-      if (pvs.length) {
-        const pvWrap = el('div', { class: 'viewer-section-previews' });
-        pvs.forEach(u => {
-          const prev = el('div', { class: 'viewer-section-preview' });
-          prev.appendChild(el('img', { src: u }));
-          pvWrap.appendChild(prev);
-        });
-        sh.appendChild(pvWrap);
-      } else {
-        const prev = el('div', { class: 'viewer-section-preview' });
-        prev.textContent = '🏠';
-        sh.appendChild(prev);
-      }
-      sh.appendChild(el('div', { class: 'viewer-section-title' }, `[ ${sec.title || '未命名'} ]`));
-      s.appendChild(sh);
-      s.appendChild(renderMaterialGrid(sec.items || []));
-      // 分区备注（仅当有文字时显示）
-      if (sec.notes && sec.notes.trim()) {
-        s.appendChild(el('div', { class: 'viewer-section-notes' },
-          el('div', { class: 'viewer-notes-content' }, sec.notes.trim())
-        ));
-      }
-      body.appendChild(s);
+    const s = el('div', { class: 'viewer-section' });
+    const sh = el('div', { class: 'viewer-section-header' });
+    const prev = el('div', { class: 'viewer-section-preview' });
+    if (sec.preview) prev.appendChild(el('img', { src: sec.preview }));
+    else prev.textContent = '🏠';
+    sh.appendChild(prev);
+    sh.appendChild(el('div', { class: 'viewer-section-title' }, `[ ${sec.title || '未命名'} ]`));
+    s.appendChild(sh);
+    s.appendChild(renderMaterialGrid(sec.items || []));
+    // 分区备注（仅当有文字时显示）
+    if (sec.notes && sec.notes.trim()) {
+      s.appendChild(el('div', { class: 'viewer-section-notes' },
+        el('div', { class: 'viewer-notes-content' }, sec.notes.trim())
+      ));
     }
+    body.appendChild(s);
   });
 
   // 自由文字备注区（仅当有文字时显示，空时完全隐藏）
@@ -1847,81 +1236,6 @@ function renderMaterialGrid(items) {
     grid.appendChild(cell);
   });
   return grid;
-}
-
-// Viewer: Free page (read-only display)
-function renderFreePageViewer(sec) {
-  const s = el('div', { class: 'viewer-section viewer-free-section' });
-  const sh = el('div', { class: 'viewer-section-header' });
-  const prev = el('div', { class: 'viewer-section-preview' });
-  prev.textContent = '✏️';
-  sh.appendChild(prev);
-  sh.appendChild(el('div', { class: 'viewer-section-title' }, `[ ${sec.title || '未命名'} ]`));
-  s.appendChild(sh);
-
-  if (sec.freePage) {
-    const fp = sec.freePage;
-    // 修复旧数据：强制按原图宽高比矫正
-    if (fp.imgW && fp.imgH && fp.w) {
-      fp.h = fp.w * (fp.imgH / fp.imgW);
-    }
-    // Stage: fixed width 800px, height computed from image aspect
-    const STAGE_W = 800;
-    const aspectH = STAGE_W * (fp.imgH / fp.imgW); // natural image height when scaled to STAGE_W
-    // Stage height = y% + h% of stage width
-    // We'll size stage = STAGE_W wide, height = (y+h)% of STAGE_W
-    // But image is in % of stage, so its pixel size is fp.w% * STAGE_W = 0.8 * 800 = 640
-    // Hmm, easier: just use a stage whose height matches the image's max bounds
-    const stageH = STAGE_W * (fp.y + fp.h) / 100 + 40; // +40 padding
-    const stage = el('div', { class: 'viewer-free-stage' });
-    stage.style.width = STAGE_W + 'px';
-    stage.style.height = stageH + 'px';
-    stage.style.maxWidth = '100%';
-    // Image: position in % of stage, but stage is STAGE_W wide so 1% = 8px
-    const imgEl = el('div', { class: 'viewer-free-image' });
-    imgEl.style.left = (fp.x / 100 * STAGE_W) + 'px';
-    imgEl.style.top = (fp.y / 100 * STAGE_W) + 'px';
-    imgEl.style.width = (fp.w / 100 * STAGE_W) + 'px';
-    imgEl.style.height = (fp.h / 100 * STAGE_W) + 'px';
-    imgEl.appendChild(el('img', { src: fp.image, alt: '自由页面' }));
-    stage.appendChild(imgEl);
-    // Markers: absolute pixel positions
-    const imgLeftPx = fp.x / 100 * STAGE_W;
-    const imgTopPx = fp.y / 100 * STAGE_W;
-    const imgWidthPx = fp.w / 100 * STAGE_W;
-    const imgHeightPx = fp.h / 100 * STAGE_W;
-    (sec.markers || []).forEach((mk, mkIdx) => {
-      const m = el('div', { class: 'viewer-free-marker' }, String(mkIdx + 1));
-      m.style.left = (imgLeftPx + mk.rx * imgWidthPx) + 'px';
-      m.style.top = (imgTopPx + mk.ry * imgHeightPx) + 'px';
-      m.style.transform = 'translate(-50%, -50%)';
-      m.title = mk.note || '';
-      stage.appendChild(m);
-    });
-    s.appendChild(stage);
-    // Marker notes list
-    const notes = (sec.markers || []).filter(mk => mk.note && mk.note.trim());
-    if (notes.length > 0) {
-      const list = el('div', { class: 'viewer-free-notes' });
-      (sec.markers || []).forEach((mk, mkIdx) => {
-        if (!mk.note || !mk.note.trim()) return;
-        const item = el('div', { class: 'viewer-free-note-item' });
-        item.appendChild(el('div', { class: 'num' }, String(mkIdx + 1)));
-        item.appendChild(el('div', { class: 'text' }, mk.note.trim()));
-        list.appendChild(item);
-      });
-      s.appendChild(list);
-    }
-  } else {
-    s.appendChild(el('div', { style: { padding: '20px', textAlign: 'center', color: 'var(--text-light)' } }, '（暂无图片）'));
-  }
-
-  if (sec.notes && sec.notes.trim()) {
-    s.appendChild(el('div', { class: 'viewer-section-notes' },
-      el('div', { class: 'viewer-notes-content' }, sec.notes.trim())
-    ));
-  }
-  return s;
 }
 
 // ===== Export: JSON =====
@@ -1999,25 +1313,12 @@ async function exportImages(build) {
     });
   });
   if (build.cover) tasks.push(loadImg(build.cover).then(img => { imgCache[build.cover] = img; }));
-  if (build.avatar) tasks.push(loadImg(build.avatar).then(img => { imgCache[build.avatar] = img; }));
   (build.sections || []).forEach(sec => {
-    secPreviews(sec).forEach(pv => {
-      if (!seen.has(pv)) {
-        seen.add(pv);
-        tasks.push(loadImg(pv).then(img => { imgCache[pv] = img; }));
-      }
-    });
-    // 预加载自由页面图片
-    if (sec.freePage && sec.freePage.image) {
-      const fpImg = sec.freePage.image;
-      tasks.push(loadImg(fpImg).then(img => { imgCache[fpImg] = img; }));
-    }
+    if (sec.preview) tasks.push(loadImg(sec.preview).then(img => { imgCache[sec.preview] = img; }));
   });
   // 预加载背景附件
   if (BG1) tasks.push(loadImg(BG1).then(img => { imgCache.__BG1 = img; }));
   if (BG2) tasks.push(loadImg(BG2).then(img => { imgCache.__BG2 = img; }));
-  // 预加载 logo
-  if (LOGO) tasks.push(loadImg(LOGO).then(img => { imgCache.__LOGO = img; }));
   await Promise.all(tasks);
 
   // === 2. 画布参数 ===
@@ -2025,26 +1326,23 @@ async function exportImages(build) {
   const CW = EXPORT_W - PAD_X * 2;   // 内容宽度 (1460)
   const TITLE_BAR_H = 100;            // 顶部标题栏高度 (附件1的细长栏)
   const TITLE_GAP = 40;               // 标题栏与主内容间距
-  const COLS = 5;                     // 每行 5 个道具
-  const CELL_W = 248;                 // 5 列，卡片较窄，间隙 55（整数，消除半像素描边发虚）
+  const COLS = 5;                     // 列数调整到 5（图标更大需要）
+  const CELL_W = 270;
   const CELL_GAP = (CW - COLS * CELL_W) / (COLS - 1);
-  const ICON_SIZE = 150;              // 图标尺寸（5 列下 150，卡片更矮更透气）
-  const NAME_FONT = 36;               // 道具名字号
-  const NAME_LINE_H = 48;                  // 1.33×字号(36px)，对齐编辑器 1.3 舒适行高（原 42=1.17 偏挤）
-  const NAME_MAX_LINES = 2;           // 道具名最多 2 行（超长名在第 2 行截断加 '…'，名称区更矮）
-  const QTY_FONT = 26;
-  const SEC_TITLE_FONT = 50;            // 分区标题徽章字号（用户要求 50px 粗体 左对齐）
-  const SECTION_GAP = 120;             // 分区间距（虚线两侧各半）
-  const NOTES_FONT = 36;               // 备注字号（与 NAME_FONT 一致）
-  const MARKER_NOTE_FONT = 48;        // 自由页标注列表正文 + 备注正文（用户要求 48px，区别于道具名）
-  const NOTES_LINE_H = 72;             // 备注/标注行高：1.5×字号(48px)，避免中文多行拥挤
+  const ICON_SIZE = 170;              // 图标尺寸 (原 200 -> 170，更紧凑)
+  const NAME_FONT = 26;               // 道具名字号 (与分区一致)
+  const NAME_LINE_H = 32;
+  const NAME_MAX_LINES = 2;
+  const QTY_FONT = 20;
+  const SEC_TITLE_FONT = 26;
+  const SECTION_GAP = 30;
   const CELL_H = ICON_SIZE + 12 + NAME_LINE_H * NAME_MAX_LINES + 8;
-  const ROW_GAP = 40;                 // 行间距（方案B：28→40）
+  const ROW_GAP = 28;
   const ROW_H = CELL_H + ROW_GAP;
   const SEC_HEADER_H = 90;            // 分区标题高（仅预览图+badge 风格，更紧凑）
-  const SEC_BADGE_H = 78;            // 分区标题徽章紫框高度（比 50px 字号放宽，视觉更舒展）
+  const SEC_BADGE_H = 56;
   // 每页内容可用区域高度 (附件1: ~1900, 附件2: ~2560)
-  const PG1_BODY_TOP = 660;           // 附件1 白色面板顶 + 内边距（缩小与标题栏间距）
+  const PG1_BODY_TOP = 760;           // 附件1 白色面板顶 + 内边距
   const PG_NEXT_BODY_TOP = 110;       // 附件2 白色面板顶 + 内边距
   const BODY_BOTTOM_PAD = 80;
 
@@ -2085,8 +1383,8 @@ async function exportImages(build) {
       ctx.fillStyle = '#7c5fb6';
       ctx.font = `bold 36px "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.textBaseline = 'middle';
-      ctx.textAlign = 'left';
-      ctx.fillText(build.name || '未命名', PAD_X, 500);
+      ctx.textAlign = 'center';
+      ctx.fillText((build.name || '未命名') + ' 材料单', EXPORT_W / 2, 600);
       // 不增加 y，由后续bodyTop接管
       return false; // 不预留空间
     }
@@ -2099,58 +1397,25 @@ async function exportImages(build) {
     ctx.font = `bold 38px "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
-    ctx.fillText(build.name || '未命名', bx, by + bh / 2 + 2);
+    ctx.fillText((build.name || '未命名') + ' 材料单', bx + 24, by + bh / 2);
     y += TITLE_BAR_H + TITLE_GAP;
     return true;
   }
 
-  // 计算分区头布局：badge 在顶部左对齐，预览图在文案下方满宽横向排列
-  // 无预览图时高度 = SEC_BADGE_H；有预览图时高度 = SEC_BADGE_H + 间距 + pvH
-  function calcSecHeaderLayout(sec) {
-    const previews = secPreviews(sec).filter(pv => imgCache[pv]);
+  function drawSectionHeader(sec) {
+    const sx = PAD_X, sy = y;
+    // 不再绘制分区预览图（缩小整体高度），改用纯 badge
     const badgeText = '[ ' + (sec.title || '未命名') + ' ]';
     ctx.font = `bold ${SEC_TITLE_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
-    const badgeW = Math.round(ctx.measureText(badgeText).width) + 64;
-    if (!previews.length) return { previews, badgeW, badgeText, cellW: 0, pvH: SEC_BADGE_H, gap: 12 };
-    const n = previews.length;
-    const gap = 12;
-    // 预览图移到文案下方：可用宽度 = 内容满宽；每张最大 400
-    const availW = CW;
-    let cellW = Math.min(400, Math.floor((availW - (n - 1) * gap) / n));
-    cellW = Math.max(cellW, 110);           // 最小宽度保护
-    const pvH = Math.round(cellW * 0.65);   // 与单张 400x260 比例一致
-    return { previews, badgeW, badgeText, cellW, pvH, gap };
-  }
-
-  function drawSectionHeader(sec, trailGap = 24) {
-    const sx = PAD_X, sy = y;
-    const lay = calcSecHeaderLayout(sec);
-    // 分区文案（badge）始终在顶部左对齐
-    const bw = lay.badgeW;
+    const bw = ctx.measureText(badgeText).width + 40;
     drawRoundedRect(ctx, sx, sy, bw, SEC_BADGE_H, 12);
     ctx.fillStyle = '#7c5fb6';
     ctx.fill();
     ctx.fillStyle = '#fff';
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'center';
-    ctx.fillText(lay.badgeText, sx + bw / 2, sy + SEC_BADGE_H / 2 + 2.5);
-    let headerH = SEC_BADGE_H;
-    // 预览图移到文案下方（满宽横向排列，单张上限 400）
-    if (lay.previews.length) {
-      const pgap = 16;
-      let px = sx;
-      const py = sy + SEC_BADGE_H + pgap;
-      lay.previews.forEach(pv => {
-        ctx.save();
-        drawRoundedRect(ctx, px, py, lay.cellW, lay.pvH, 8);
-        ctx.clip();
-        drawImageContain(ctx, imgCache[pv], px, py, lay.cellW, lay.pvH);
-        ctx.restore();
-        px += lay.cellW + lay.gap;
-      });
-      headerH += pgap + lay.pvH;
-    }
-    y += headerH + trailGap;
+    ctx.fillText(badgeText, sx + bw / 2, sy + SEC_BADGE_H / 2);
+    y += SEC_HEADER_H + 8;
   }
 
   function drawItemCell(item, col) {
@@ -2158,15 +1423,10 @@ async function exportImages(build) {
     if (!meta) return;
     const cx = PAD_X + col * (CELL_W + CELL_GAP);
     const cy = y;
-    // Cell bg（白色 + 紫色细边框 + 柔和投影）
-    ctx.save();
-    ctx.shadowColor = 'rgba(124,95,182,0.18)';
-    ctx.shadowBlur = 12;
-    ctx.shadowOffsetY = 4;
+    // Cell bg（白色 + 紫色细边框）
     ctx.fillStyle = '#fff';
     drawRoundedRect(ctx, cx, cy, CELL_W, CELL_H, 12);
     ctx.fill();
-    ctx.restore();
     ctx.strokeStyle = '#ebe1f0';
     ctx.lineWidth = 2;
     ctx.stroke();
@@ -2223,45 +1483,13 @@ async function exportImages(build) {
       ctx.fill();
       ctx.stroke();
     }
-    // Qty（×N）：右上角白底圆角 chip，提升可读性（不压图标）
+    // Qty（×N 显著加大）
     const qty = item.qty || 1;
     if (qty > 1) {
-      const qtxt = '×' + qty;
-      ctx.font = `bold ${QTY_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
-      const qw = ctx.measureText(qtxt).width + 22;
-      const qh = QTY_FONT + 16;
-      const qx = cx + CELL_W - qw - 8, qy = cy + 8;
-      ctx.save();
-      ctx.shadowColor = 'rgba(0,0,0,0.12)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 2;
-      ctx.fillStyle = '#fff';
-      drawRoundedRect(ctx, qx, qy, qw, qh, 8); ctx.fill();
-      ctx.restore();
-      ctx.strokeStyle = '#ebe1f0'; ctx.lineWidth = 1.5;
-      drawRoundedRect(ctx, qx, qy, qw, qh, 8); ctx.stroke();
       ctx.fillStyle = '#7c5fb6';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(qtxt, qx + qw / 2, qy + qh / 2 + 1);
+      ctx.font = `bold ${QTY_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.fillText('×' + qty, cx + CELL_W - 12, cy + 12);
     }
-  }
-
-  // 工具：按宽度折行，但保留手动换行（\n 分段）
-  function wrapNotesLines(text, maxW, maxLines) {
-    const out = [];
-    for (const para of String(text).split('\n')) {
-      if (para === '') { out.push(''); continue; } // 空段落 = 一个空行占位
-      let line = '';
-      for (const ch of [...para]) {
-        const test = line + ch;
-        if (ctx.measureText(test).width > maxW && line) {
-          out.push(line);
-          line = ch;
-          if (out.length >= maxLines) return out;
-        } else { line = test; }
-      }
-      if (line) out.push(line);
-      if (out.length >= maxLines) return out;
-    }
-    return out;
   }
 
   // 文字备注绘制（通用，用于分区备注和全局备注）
@@ -2270,11 +1498,22 @@ async function exportImages(build) {
     const trimmed = (text || '').trim();
     if (!trimmed) return;
     const bottomY = EXPORT_H - BODY_BOTTOM_PAD;
-    // 计算高度（保留手动换行 \n）
-    ctx.font = `${MARKER_NOTE_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
+    // 计算高度
+    ctx.font = `${NAME_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
     const maxW = CW - 60;
-    const lines = wrapNotesLines(trimmed, maxW, 14);
-    const notesH = 24 + lines.length * NOTES_LINE_H + 24;
+    const chars = [...trimmed];
+    const lines = [];
+    let line = '';
+    for (const ch of chars) {
+      const test = line + ch;
+      if (ctx.measureText(test).width > maxW && line) {
+        lines.push(line);
+        line = ch;
+        if (lines.length >= 14) break; // 限制最大行数
+      } else { line = test; }
+    }
+    if (line) lines.push(line);
+    const notesH = 24 + lines.length * 36 + 24;
     // 检查是否需要换页
     if (bottomY - y < notesH + 30) {
       newPage(false);
@@ -2288,24 +1527,22 @@ async function exportImages(build) {
     }
     // 绘制备注框
     const nx = PAD_X, ny = y;
-    const nh = 24 + lines.length * NOTES_LINE_H + 24;
-    ctx.save();
-    ctx.shadowColor = 'rgba(124,95,182,0.18)';
-    ctx.shadowBlur = 12;
-    ctx.shadowOffsetY = 4;
+    const nh = 24 + lines.length * 36 + 24;
     ctx.fillStyle = '#fff';
     drawRoundedRect(ctx, nx, ny, CW, nh, 12);
     ctx.fill();
-    ctx.restore();
+    // 左边紫色描边
+    ctx.fillStyle = '#7c5fb6';
+    ctx.fillRect(nx, ny, 6, nh);
     // 文字
     ctx.fillStyle = '#2c2138';
-    ctx.font = `${MARKER_NOTE_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${NAME_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textBaseline = 'top';
     ctx.textAlign = 'left';
     let ty = ny + 20;
     for (const ln of lines) {
-      if (ln) ctx.fillText(ln, nx, ty); // 空行不绘制，仅占位保留换行；文字与边框左对齐
-      ty += NOTES_LINE_H;
+      ctx.fillText(ln, nx + 24, ty);
+      ty += 36;
     }
     y = ny + nh + 10;
   }
@@ -2324,58 +1561,6 @@ async function exportImages(build) {
   // === 开始渲染 ===
   newPage(true);
 
-  // 封面图（第一页上方，标题栏之上）
-  // logo 占右侧 → 封面距背景左边约 120px
-  if (build.cover && imgCache[build.cover]) {
-    const cv = imgCache[build.cover];
-    const maxW = 560;
-    const maxH = 350;
-    let cw = cv.width, ch = cv.height;
-    const scale = Math.min(maxW / cw, maxH / ch);
-    cw = Math.round(cw * scale);
-    ch = Math.round(ch * scale);
-    const cx = 120;                      // 距背景左边约 120px
-    const cy = 65;
-    // 阴影
-    ctx.fillStyle = 'rgba(124,95,182,0.18)';
-    drawRoundedRect(ctx, cx + 4, cy + 4, cw, ch, 12);
-    ctx.fill();
-    // 图片
-    drawImageContain(ctx, cv, cx, cy, cw, ch);
-    // 紫色细边框
-    ctx.strokeStyle = '#7c5fb6';
-    ctx.lineWidth = 3;
-    drawRoundedRect(ctx, cx, cy, cw, ch, 12);
-    ctx.stroke();
-  }
-
-  // Pokemon Pokopia logo：放大，下移保证完整性，与封面有重叠
-  // logo.png 尺寸 261x192，外扩 5px 白色描边
-  if (imgCache.__LOGO) {
-    const lg = imgCache.__LOGO;
-    const scale = 1.35;
-    const dw = Math.round(lg.width * scale);
-    const dh = Math.round(lg.height * scale);
-    const centerX = 190;
-    const centerY = Math.round(dh / 2) + 6;  // 下移，保证 logo + 描边完整可见 (dy≈6)
-    const dx = centerX - Math.round(dw / 2);
-    const dy = centerY - Math.round(dh / 2);
-    // 白色描边：构建白色剪影，环形偏移 24 方向 × 5px 铺满描边
-    const oc = document.createElement('canvas');
-    oc.width = dw; oc.height = dh;
-    const octx = oc.getContext('2d');
-    octx.drawImage(lg, 0, 0, dw, dh);
-    octx.globalCompositeOperation = 'source-in';
-    octx.fillStyle = '#ffffff';
-    octx.fillRect(0, 0, dw, dh);
-    const STEPS = 24;
-    for (let a = 0; a < STEPS; a++) {
-      const rad = (a / STEPS) * Math.PI * 2;
-      ctx.drawImage(oc, dx + Math.round(Math.cos(rad) * 5), dy + Math.round(Math.sin(rad) * 5));
-    }
-    ctx.drawImage(lg, dx, dy, dw, dh);
-  }
-
   // 顶部标题绘制在附件1的"紫色边框标题栏"内左对齐
   // 实测附件1标题栏：Y 450-550 (中心 500)，X 38-1545 (宽 1507)
   const titleY = 500;
@@ -2384,19 +1569,22 @@ async function exportImages(build) {
   ctx.fillStyle = 'rgba(255,255,255,0.92)';
   drawRoundedRect(ctx, titleBg.x, titleBg.y, titleBg.w, titleBg.h, 12);
   ctx.fill();
+  // 左边紫色描边
+  ctx.fillStyle = '#7c5fb6';
+  ctx.fillRect(titleBg.x, titleBg.y, 8, titleBg.h);
   // 标题文字：左对齐 + 垂直居中于框
   ctx.fillStyle = '#7c5fb6';
-  ctx.font = `bold 50px "PingFang SC", "Microsoft YaHei", sans-serif`;
+  ctx.font = `bold 48px "PingFang SC", "Microsoft YaHei", sans-serif`;
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'left';
-  ctx.fillText(build.name || '未命名', titleBg.x, titleY + 2.5);
+  ctx.fillText((build.name || '未命名') + ' 材料单', titleBg.x + 36, titleY);
 
   // 绘制分区
   function renderSection(sec) {
     const items = sec.items || [];
     if (items.length === 0) return;
-    // 检查空间：分区头部（含预览图实际高度）+ 至少 1 行
-    if (availH() < calcSecHeaderLayout(sec).pvH + ROW_H) {
+    // 检查空间：分区头部 + 至少 1 行
+    if (availH() < SEC_HEADER_H + ROW_H) {
       newPage(false);
     }
     drawSectionHeader(sec);
@@ -2406,7 +1594,7 @@ async function exportImages(build) {
       if (col === 0 && i > 0) y += ROW_H;
       if (y + CELL_H > EXPORT_H - BODY_BOTTOM_PAD) {
         newPage(false);
-        drawSectionHeader({ title: (sec.title || '未命名') + '（续）', previews: secPreviews(sec) });
+        drawSectionHeader({ title: (sec.title || '未命名') + '（续）', preview: sec.preview });
         // 当前 i 位置需要重新放置
         const newCol = i % COLS;
         if (newCol > 0) y -= ROW_H; // 撤销上面 col===0 的 ROW_H
@@ -2419,156 +1607,8 @@ async function exportImages(build) {
     drawNotes(sec.notes, { isContinuation: false });
   }
 
-  // Render free page section on canvas
-  function renderFreePage(sec) {
-    if (!sec.freePage) return;
-    // Reserve section header + image + marker list
-    // Compute image display size based on canvas width
-    const stageW = CW; // 1460
-    const fp = sec.freePage;
-    // Image occupies fp.w% of stageW horizontally
-    const imgW = Math.round(stageW * fp.w / 100);
-    const imgH = Math.round(imgW * (fp.imgH / fp.imgW));
-    const imgX = PAD_X + Math.round(stageW * fp.x / 100);
-    // 分区头实际高度（自由分区也可能带多张预览图）
-    const hh = calcSecHeaderLayout(sec).pvH;
-    // Reserve space: 头高 + 10(间距) + 图高 + 32(底部)
-    const totalNeeded = hh + imgH + 42;
-    if (totalNeeded > availH()) {
-      newPage(false);
-    }
-    // 传 10：头底部与图片间距 10px（drawSectionHeader 只推进头高+10）
-    drawSectionHeader(sec, 10);
-    // Draw image（此时 y 已在头底部 + 10）
-    const img = imgCache[fp.image];
-    if (img) {
-      drawImageContain(ctx, img, imgX, y, imgW, imgH);
-    } else {
-      // Placeholder
-      ctx.fillStyle = '#f0e8f4';
-      drawRoundedRect(ctx, imgX, y, imgW, imgH, 12);
-      ctx.fill();
-      ctx.strokeStyle = '#7c5fb6';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-    // Draw markers
-    const markerR = 30;                // 图片上编号圆点半径（配合 38px 数字）
-    const markerFont = 38;            // 图片上编号圆点内数字（用户要求 38px 粗体）
-    (sec.markers || []).forEach((mk, mkIdx) => {
-      const mx = imgX + Math.round(imgW * mk.rx);
-      const my = y + Math.round(imgH * mk.ry);
-      // Numbered circle (purple bg, white text, white border)
-      ctx.fillStyle = '#7c5fb6';
-      ctx.beginPath();
-      ctx.arc(mx, my, markerR, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 3;
-      ctx.stroke();
-      ctx.fillStyle = '#fff';
-      ctx.font = `${markerFont}px "PingFang SC", "Microsoft YaHei", sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.lineJoin = 'round';
-      ctx.lineWidth = 5;
-      ctx.strokeStyle = '#fff';
-      ctx.strokeText(String(mkIdx + 1), mx, my + 2);   // 白色描边：数字更粗更立体
-      ctx.fillText(String(mkIdx + 1), mx, my + 2);
-    });
-    y += imgH + 32;
-    // Marker notes (text list below image)
-    if ((sec.markers || []).length > 0) {
-      const noteItems = (sec.markers || []).map((mk, i) => ({
-        num: i + 1,
-        text: (mk.note || '').trim(),
-      })).filter(it => it.text);
-      if (noteItems.length > 0) {
-        ctx.font = `${MARKER_NOTE_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
-        const maxW = CW - 100;
-        // Compute total height needed
-        const itemHeights = noteItems.map(it => {
-          const n = wrapNotesLines(it.text, maxW - 80, 99).length;
-          return Math.max(1, n) * NOTES_LINE_H + 16;
-        });
-        const totalH = itemHeights.reduce((a, b) => a + b, 0) + 20;
-        if (y + totalH > EXPORT_H - BODY_BOTTOM_PAD) {
-          newPage(false);
-        }
-        // Draw list box
-        const nx = PAD_X, ny = y;
-        ctx.save();
-        ctx.shadowColor = 'rgba(124,95,182,0.18)';
-        ctx.shadowBlur = 12;
-        ctx.shadowOffsetY = 4;
-        ctx.fillStyle = '#faf5fc';
-        drawRoundedRect(ctx, nx, ny, CW, totalH, 12);
-        ctx.fill();
-        ctx.restore();
-        // Items
-        let cy = ny + 16;
-        noteItems.forEach((it, i) => {
-          const itemH = itemHeights[i];
-          // Number circle（与首行文字垂直居中对齐）
-          const numCY = cy + 6 + 24;        // 首行文字(48px)视觉中心
-          ctx.fillStyle = '#7c5fb6';
-          ctx.beginPath();
-          ctx.arc(nx + 32, numCY, 20, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = '#fff';
-          ctx.font = `bold 30px "PingFang SC", "Microsoft YaHei", sans-serif`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(String(it.num), nx + 32, numCY + 2);
-          // Text
-          ctx.fillStyle = '#2c2138';
-          ctx.font = `${MARKER_NOTE_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
-          ctx.textAlign = 'left';
-          ctx.textBaseline = 'top';
-          const ls = wrapNotesLines(it.text, maxW - 80, 99);
-          let lineY = cy + 6;
-          for (const ln of ls) {
-            if (ln) ctx.fillText(ln, nx + 64, lineY); // 空行不绘制，仅占位
-            lineY += NOTES_LINE_H;
-          }
-          cy += itemH;
-        });
-        y = ny + totalH + 12;
-      }
-    }
-    // Section notes
-    drawNotes(sec.notes, { isContinuation: false });
-  }
-
-  let prevRendered = false;
   for (let sIdx = 0; sIdx < (build.sections || []).length; sIdx++) {
-    const sec = build.sections[sIdx];
-    const willRender = sec.type === 'free' ? !!sec.freePage : (sec.items || []).length > 0;
-    // 分区之间：扩大间距 + 虚线分割线
-    if (prevRendered && willRender) {
-      y += Math.round(SECTION_GAP / 2);
-      // 若剩余空间不足以放 分割线+下一分区头，则先翻页（虚线不画在页尾）
-      if (y + SECTION_GAP + calcSecHeaderLayout(sec).pvH > EXPORT_H - BODY_BOTTOM_PAD) {
-        newPage(false);
-      } else {
-        ctx.save();
-        ctx.strokeStyle = 'rgba(124,95,182,0.5)';
-        ctx.lineWidth = 3;
-        ctx.setLineDash([24, 16]);
-        ctx.beginPath();
-        ctx.moveTo(PAD_X, y);
-        ctx.lineTo(EXPORT_W - PAD_X, y);
-        ctx.stroke();
-        ctx.restore();
-        y += Math.round(SECTION_GAP / 2);
-      }
-    }
-    if (sec.type === 'free') {
-      renderFreePage(sec);
-    } else {
-      renderSection(sec);
-    }
-    if (willRender) prevRendered = true;
+    renderSection(build.sections[sIdx]);
   }
 
   // 绘制全局备注（在所有分区后）
@@ -2577,64 +1617,29 @@ async function exportImages(build) {
   // 收尾
   if (canvas) pages.push(canvas);
 
-  // === 每页页脚：左下角作者（头像 + 名字） + 底部居中页码 ===
-  const totalPages = pages.length;
-  pages.forEach((cv, pi) => {
-    const cctx = cv.getContext('2d');
-    cctx.save();
-    cctx.textBaseline = 'middle';
-
-    // --- 作者块（左下角）：头像单独出现（无橙色框 + 白色包边），@名字在旁独立橙色块 ---
-    const AV = 120;                                   // 头像内容直径
-    const WB = 10;                                    // 白色包边厚度（半径方向）
-    const hasAvatar = !!(build.avatar && imgCache[build.avatar]);
-    const NB_GAP = 20;                                // 头像与名字块的间距
-    const NB_H = 56;                                  // 名字块高度
-    const outerD = AV + 2 * WB;                       // 头像含白边总直径
-    const oBottom = EXPORT_H - 5;                     // 含白边整体下沿距底 5px
-    const oTop = oBottom - outerD;                    // 含白边整体顶
-    const oCx = PAD_X + outerD / 2;                   // 中心 x
-    const oCy = oTop + outerD / 2;                    // 中心 y（与头像内容同心）
-    // 名字独立橙色块（在头像右侧；无头像时从 PAD_X 起、底部对齐）
-    if (build.author && build.author.trim()) {
-      const authorText = '@' + build.author.trim();
-      cctx.font = `bold 40px "PingFang SC", "Microsoft YaHei", sans-serif`;
+  // === 每页左下角：作者纯色块 + 名字 ===
+  if (build.author && build.author.trim()) {
+    const authorText = '@' + build.author.trim();
+    pages.forEach(cv => {
+      const cctx = cv.getContext('2d');
+      cctx.save();
+      cctx.font = `bold 30px "PingFang SC", "Microsoft YaHei", sans-serif`;
       const tw = cctx.measureText(authorText).width;
-      const nbw = tw + 56;
-      const nbx = hasAvatar ? (PAD_X + outerD + NB_GAP) : PAD_X;
-      const nbY = hasAvatar ? (oCy - NB_H / 2) : (oBottom - NB_H);  // 有头像：与头像垂直居中；无头像：距底 5px
-      cctx.fillStyle = '#ff8a3d';                     // 橙色圆角底块
-      drawRoundedRect(cctx, nbx, nbY, nbw, NB_H, 14);
+      const bw = tw + 56, bh = 56;
+      const bx = PAD_X;
+      const by = EXPORT_H - bh - 20;
+      // 纯色块
+      cctx.fillStyle = '#ff8a3d';
+      drawRoundedRect(cctx, bx, by, bw, bh, 14);
       cctx.fill();
+      // 名字（白色粗体，居中显示在色块上）
       cctx.fillStyle = '#fff';
       cctx.textAlign = 'center';
       cctx.textBaseline = 'middle';
-      cctx.fillText(authorText, nbx + nbw / 2, nbY + NB_H / 2 + 2);
-    }
-    // 头像（单独，无橙色框）+ 白色包边
-    if (hasAvatar) {
-      const ax = PAD_X + WB, ay = oTop + WB, ar = AV / 2;  // 与白圆同心，避免头像被裁切
-      // 白色包边（实心圆，直径 = outerD）
-      cctx.fillStyle = '#7c5fb6';                     // 紫色包边（与项目主色一致）
-      cctx.beginPath();
-      cctx.arc(oCx, oCy, ar + WB, 0, Math.PI * 2);
-      cctx.fill();
-      // 头像内容（裁剪圆形）
-      cctx.save();
-      cctx.beginPath();
-      cctx.arc(oCx, oCy, ar, 0, Math.PI * 2);
-      cctx.clip();
-      cctx.drawImage(imgCache[build.avatar], ax, ay, AV, AV);
+      cctx.fillText(authorText, bx + bw / 2, by + bh / 2 + 1);
       cctx.restore();
-    }
-
-    // --- 底部居中页码：第 N / 共 M 页 ---
-    cctx.font = `20px "PingFang SC", "Microsoft YaHei", sans-serif`;
-    cctx.fillStyle = '#000000';
-    cctx.textAlign = 'center';
-    cctx.fillText('第 ' + (pi + 1) + ' / 共 ' + totalPages + ' 页', EXPORT_W / 2, EXPORT_H - 23);
-    cctx.restore();
-  });
+    });
+  }
 
   // === 4. 下载 ===
   for (let i = 0; i < pages.length; i++) {

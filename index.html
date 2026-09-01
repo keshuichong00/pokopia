@@ -2031,7 +2031,7 @@ async function exportImages(build) {
   const ICON_SIZE = 150;              // 图标尺寸（5 列下 150，卡片更矮更透气）
   const NAME_FONT = 36;               // 道具名字号
   const NAME_LINE_H = 48;                  // 1.33×字号(36px)，对齐编辑器 1.3 舒适行高（原 42=1.17 偏挤）
-  const NAME_MAX_LINES = 3;           // 道具名最多 3 行（超长名不再被 '…' 截断）
+  const NAME_MAX_LINES = 2;           // 道具名最多 2 行（超长名在第 2 行截断加 '…'，名称区更矮）
   const QTY_FONT = 26;
   const SEC_TITLE_FONT = 50;            // 分区标题徽章字号（用户要求 50px 粗体 左对齐）
   const SECTION_GAP = 120;             // 分区间距（虚线两侧各半）

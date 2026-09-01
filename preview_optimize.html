@@ -2025,13 +2025,13 @@ async function exportImages(build) {
   const CW = EXPORT_W - PAD_X * 2;   // 内容宽度 (1460)
   const TITLE_BAR_H = 100;            // 顶部标题栏高度 (附件1的细长栏)
   const TITLE_GAP = 40;               // 标题栏与主内容间距
-  const COLS = 5;                     // 每行 5 个道具
-  const CELL_W = 248;                 // 5 列，卡片较窄，间隙 55（整数，消除半像素描边发虚）
+  const COLS = 4;                     // 4 列更透气（原 5 列偏满）
+  const CELL_W = 290;                 // 4 列时卡片加宽，间隙 100（整数，消除半像素描边发虚）
   const CELL_GAP = (CW - COLS * CELL_W) / (COLS - 1);
-  const ICON_SIZE = 150;              // 图标尺寸（5 列下 150，卡片更矮更透气）
+  const ICON_SIZE = 160;              // 预览版：图标 200→160，图片变矮、卡片不再头重（可调）
   const NAME_FONT = 36;               // 道具名字号
   const NAME_LINE_H = 48;                  // 1.33×字号(36px)，对齐编辑器 1.3 舒适行高（原 42=1.17 偏挤）
-  const NAME_MAX_LINES = 2;           // 道具名最多 2 行（超长名在第 2 行截断加 '…'，名称区更矮）
+  const NAME_MAX_LINES = 3;           // 道具名最多 3 行（超长名不再被 '…' 截断）
   const QTY_FONT = 26;
   const SEC_TITLE_FONT = 50;            // 分区标题徽章字号（用户要求 50px 粗体 左对齐）
   const SECTION_GAP = 120;             // 分区间距（虚线两侧各半）
@@ -2180,7 +2180,7 @@ async function exportImages(build) {
     ctx.font = `${NAME_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textBaseline = 'top';
     ctx.textAlign = 'center';
-    const nameStartY = iy + ICON_SIZE + 8;
+    const nameStartY = iy + ICON_SIZE + 22;  // 预览版：图→名间距 8→22，拉开呼吸感
     const chars = [...meta.nameZh];
     let line = '', lineIdx = 0;
     let lastLineText = '', lastLineY = nameStartY;
@@ -2205,22 +2205,23 @@ async function exportImages(build) {
       lastLineY = nameStartY + lineIdx * NAME_LINE_H;
       ctx.fillText(line, cx + CELL_W / 2, lastLineY);
     }
-    // 染色点：在名字最后一行后面（贴边防溢出）
+    // 染色标记：卡片左上角彩色圆点（白环+深色描边，醒目，与编辑器一致），不再压在文字末尾
     if (item.color && DYE_BY_ID[item.color]) {
       const dColor = DYE_BY_ID[item.color].color;
-      const dotR = 10;
-      const lastLineW = ctx.measureText(lastLineText).width;
-      const lastLineEndX = cx + CELL_W / 2 + lastLineW / 2;
-      let dotX = lastLineEndX + dotR + 5;
-      // 防止溢出 cell 右边
-      if (dotX + dotR > cx + CELL_W - 4) dotX = cx + CELL_W - dotR - 4;
-      const dotY = lastLineY + NAME_LINE_H / 2;
-      ctx.fillStyle = dColor;
-      ctx.strokeStyle = 'rgba(0,0,0,0.45)';
-      ctx.lineWidth = 1.5;
+      const dotR = 16;                       // 直径 32px，明显大于原 20px
+      const dotX = cx + dotR + 6, dotY = cy + dotR + 6;   // 左上角、距边 6px
+      // 白色外环：在任何图标底色上都跳出
+      ctx.beginPath();
+      ctx.arc(dotX, dotY, dotR + 2, 0, Math.PI * 2);
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+      // 染色色圆
       ctx.beginPath();
       ctx.arc(dotX, dotY, dotR, 0, Math.PI * 2);
+      ctx.fillStyle = dColor;
       ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+      ctx.lineWidth = 1.5;
       ctx.stroke();
     }
     // Qty（×N）：右上角白底圆角 chip，提升可读性（不压图标）

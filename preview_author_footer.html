@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>预览：作者头像块 + 页码页脚</title>
+<style>
+  body{margin:0;background:#eee;font-family:"PingFang SC","Microsoft YaHei",sans-serif;color:#333;padding:24px}
+  h2{font-size:18px;margin:0 0 6px}
+  .note{font-size:13px;color:#777;margin:0 0 18px;line-height:1.6}
+  .wrap{display:flex;gap:24px;flex-wrap:wrap}
+  .card{background:#fff;border-radius:10px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+  canvas{display:block;border:1px solid #ddd;border-radius:6px;background:#fdf7f7}
+  .cap{font-size:13px;margin-top:8px;text-align:center;color:#555}
+</style>
+</head>
+<body>
+  <h2>导出图页脚效果预览（仅底部 360px 区域，1:1 比例）</h2>
+  <p class="note">左=「有头像」作者块（头像在左、名字在右，橙色圆角块内）｜右=「无头像」作者块（沿用旧样式）。两者下方均为底部居中页码「第 N / 共 M 页」。真代码已按此实现，未改动其他元素。</p>
+  <div class="wrap">
+    <div class="card"><canvas id="c1" width="1600" height="360"></canvas><div class="cap">① 有头像</div></div>
+    <div class="card"><canvas id="c2" width="1600" height="360"></canvas><div class="cap">② 无头像</div></div>
+  </div>
+
+<script>
+const PAD_X=70, EXPORT_W=1600, EXPORT_H=2848;
+function drawAuthor(cctx, withAvatar){
+  const authorText='@瞌睡虫';
+  cctx.save();
+  cctx.textBaseline='middle';
+  cctx.font='bold 40px "PingFang SC","Microsoft YaHei",sans-serif';
+  const tw=cctx.measureText(authorText).width;
+  const AV=44;
+  const bh=withAvatar?Math.max(56,AV+12):56;
+  const bw=withAvatar?(8+AV+12+tw+20):(tw+56);
+  const bx=PAD_X;
+  const by=EXPORT_H-bh-20;
+  cctx.fillStyle='#ff8a3d';
+  // 圆角块
+  const r=14,x=bx,y=by,w=bw,h=bh;
+  cctx.beginPath();
+  cctx.moveTo(x+r,y);cctx.arcTo(x+w,y,x+w,y+h,r);cctx.arcTo(x+w,y+h,x,y+h,r);
+  cctx.arcTo(x,y+h,x,y,r);cctx.arcTo(x,y,x+w,y,r);cctx.closePath();cctx.fill();
+  cctx.fillStyle='#fff';cctx.textAlign='center';
+  if(withAvatar){
+    const ax=bx+8,ay=by+(bh-AV)/2,ar=AV/2;
+    cctx.save();cctx.beginPath();cctx.arc(ax+ar,ay+ar,ar,0,Math.PI*2);cctx.clip();
+    // 占位头像（渐变圆）
+    const g=cctx.createLinearGradient(ax,ay,ax+AV,ay+AV);
+    g.addColorStop(0,'#8e24aa');g.addColorStop(1,'#ff8a3d');
+    cctx.fillStyle=g;cctx.fillRect(ax,ay,AV,AV);
+    cctx.restore();
+    cctx.fillText(authorText,ax+ar+12+tw/2,by+bh/2+1);
+  } else {
+    cctx.fillText(authorText,bx+bw/2,by+bh/2+1);
+  }
+  // 页码
+  cctx.font='30px "PingFang SC","Microsoft YaHei",sans-serif';
+  cctx.fillStyle='#9e8fbe';cctx.textAlign='center';
+  cctx.fillText('第 1 / 共 3 页',EXPORT_W/2,EXPORT_H-48);
+  cctx.restore();
+}
+function strip(id,withAvatar){
+  const cv=document.getElementById(id);
+  const c=cv.getContext('2d');
+  // 仅绘制页面底部 360px（y 从 2488 到 2848），整幅画布缩放
+  c.fillStyle='#fdf7f7';c.fillRect(0,0,1600,360);
+  c.save();c.translate(0,-2488);   // 把坐标系移到底部区域
+  drawAuthor(c,withAvatar);
+  c.restore();
+}
+strip('c1',true);
+strip('c2',false);
+</script>
+</body>
+</html>
