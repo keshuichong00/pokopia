@@ -2493,10 +2493,6 @@ async function exportImages(build) {
           ctx.font = `bold 30px "PingFang SC", "Microsoft YaHei", sans-serif`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.lineJoin = 'round';
-          ctx.lineWidth = 4;
-          ctx.strokeStyle = '#fff';
-          ctx.strokeText(String(it.num), nx + 32, cy + 16);   // 白色描边
           ctx.fillText(String(it.num), nx + 32, cy + 16);
           // Text
           ctx.fillStyle = '#2c2138';
