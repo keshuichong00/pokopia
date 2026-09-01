@@ -2086,7 +2086,7 @@ async function exportImages(build) {
       ctx.font = `bold 36px "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.textBaseline = 'middle';
       ctx.textAlign = 'center';
-      ctx.fillText(build.name || '未命名', EXPORT_W / 2, 600);
+      ctx.fillText(build.name || '未命名', EXPORT_W / 2, 500);
       // 不增加 y，由后续bodyTop接管
       return false; // 不预留空间
     }
@@ -2099,7 +2099,7 @@ async function exportImages(build) {
     ctx.font = `bold 38px "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'center';
-    ctx.fillText(build.name || '未命名', bx + bw / 2, by + bh / 2);
+    ctx.fillText(build.name || '未命名', bx + bw / 2, by + bh / 2 + 2);
     y += TITLE_BAR_H + TITLE_GAP;
     return true;
   }
@@ -2150,7 +2150,7 @@ async function exportImages(build) {
     ctx.fillStyle = '#fff';
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'center';
-    ctx.fillText(lay.badgeText, badgeX + bw / 2, badgeY + SEC_BADGE_H / 2);
+    ctx.fillText(lay.badgeText, badgeX + bw / 2, badgeY + SEC_BADGE_H / 2 + 2.5);
     y += (lay.previews.length ? lay.pvH : SEC_HEADER_H) + trailGap;   // 预览图与下方内容间距（道具分区24，自由页10）
   }
 
@@ -2369,7 +2369,7 @@ async function exportImages(build) {
   ctx.font = `bold 50px "PingFang SC", "Microsoft YaHei", sans-serif`;
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'center';
-  ctx.fillText(build.name || '未命名', titleBg.x + titleBg.w / 2, titleY);
+  ctx.fillText(build.name || '未命名', titleBg.x + titleBg.w / 2, titleY + 2.5);
 
   // 绘制分区
   function renderSection(sec) {
@@ -2453,8 +2453,8 @@ async function exportImages(build) {
       ctx.lineJoin = 'round';
       ctx.lineWidth = 5;
       ctx.strokeStyle = '#fff';
-      ctx.strokeText(String(mkIdx + 1), mx, my);   // 白色描边：数字更粗更立体
-      ctx.fillText(String(mkIdx + 1), mx, my);
+      ctx.strokeText(String(mkIdx + 1), mx, my + 2);   // 白色描边：数字更粗更立体
+      ctx.fillText(String(mkIdx + 1), mx, my + 2);
     });
     y += imgH + 32;
     // Marker notes (text list below image)
@@ -2493,7 +2493,7 @@ async function exportImages(build) {
           ctx.font = `bold 30px "PingFang SC", "Microsoft YaHei", sans-serif`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText(String(it.num), nx + 32, cy + 16);
+          ctx.fillText(String(it.num), nx + 32, cy + 18);
           // Text
           ctx.fillStyle = '#2c2138';
           ctx.font = `${MARKER_NOTE_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
@@ -2583,7 +2583,7 @@ async function exportImages(build) {
       cctx.fillStyle = '#fff';
       cctx.textAlign = 'center';
       cctx.textBaseline = 'middle';
-      cctx.fillText(authorText, nbx + nbw / 2, nbY + NB_H / 2 + 1);
+      cctx.fillText(authorText, nbx + nbw / 2, nbY + NB_H / 2 + 2);
     }
     // 头像（单独，无橙色框）+ 白色包边
     if (hasAvatar) {
