@@ -2025,12 +2025,12 @@ async function exportImages(build) {
   const CW = EXPORT_W - PAD_X * 2;   // 内容宽度 (1460)
   const TITLE_BAR_H = 100;            // 顶部标题栏高度 (附件1的细长栏)
   const TITLE_GAP = 40;               // 标题栏与主内容间距
-  const COLS = 5;                     // 列数保持 5（方案B：密度保留）
-  const CELL_W = 248;                 // 方案B：270→250→248，卡片间隙 52.5→55（取整，消除半像素描边发虚）
+  const COLS = 4;                     // 4 列更透气（原 5 列偏满）
+  const CELL_W = 290;                 // 4 列时卡片加宽，间隙 100（整数，消除半像素描边发虚）
   const CELL_GAP = (CW - COLS * CELL_W) / (COLS - 1);
-  const ICON_SIZE = 160;              // 图标尺寸（方案B：170→160）
+  const ICON_SIZE = 200;              // 图标尺寸（4 列下放大到 200，更清晰）
   const NAME_FONT = 36;               // 道具名字号
-  const NAME_LINE_H = 42;
+  const NAME_LINE_H = 48;                  // 1.33×字号(36px)，对齐编辑器 1.3 舒适行高（原 42=1.17 偏挤）
   const NAME_MAX_LINES = 3;           // 道具名最多 3 行（超长名不再被 '…' 截断）
   const QTY_FONT = 26;
   const SEC_TITLE_FONT = 50;            // 分区标题徽章字号（用户要求 50px 粗体 左对齐）
@@ -2116,7 +2116,7 @@ async function exportImages(build) {
     const gap = 12;
     // 预览图可用宽度 = 内容宽 - badge宽 - 边距；每张最大 400
     const availW = CW - badgeW - 24;
-    let cellW = Math.min(400, Math.floor((availW - (n - 1) * gap) / n));
+    let cellW = Math.min(280, Math.floor((availW - (n - 1) * gap) / n));
     cellW = Math.max(cellW, 110);           // 最小宽度保护
     const pvH = Math.round(cellW * 0.65);   // 与单张 400x260 比例一致
     return { previews, badgeW, badgeText, cellW, pvH, gap };
@@ -2159,10 +2159,15 @@ async function exportImages(build) {
     if (!meta) return;
     const cx = PAD_X + col * (CELL_W + CELL_GAP);
     const cy = y;
-    // Cell bg（白色 + 紫色细边框）
+    // Cell bg（白色 + 紫色细边框 + 柔和投影）
+    ctx.save();
+    ctx.shadowColor = 'rgba(124,95,182,0.18)';
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetY = 4;
     ctx.fillStyle = '#fff';
     drawRoundedRect(ctx, cx, cy, CELL_W, CELL_H, 12);
     ctx.fill();
+    ctx.restore();
     ctx.strokeStyle = '#ebe1f0';
     ctx.lineWidth = 2;
     ctx.stroke();
@@ -2219,13 +2224,24 @@ async function exportImages(build) {
       ctx.fill();
       ctx.stroke();
     }
-    // Qty（×N 显著加大）
+    // Qty（×N）：右上角白底圆角 chip，提升可读性（不压图标）
     const qty = item.qty || 1;
     if (qty > 1) {
-      ctx.fillStyle = '#7c5fb6';
+      const qtxt = '×' + qty;
       ctx.font = `bold ${QTY_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
-      ctx.textAlign = 'right';
-      ctx.fillText('×' + qty, cx + CELL_W - 12, cy + 12);
+      const qw = ctx.measureText(qtxt).width + 22;
+      const qh = QTY_FONT + 16;
+      const qx = cx + CELL_W - qw - 8, qy = cy + 8;
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.12)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 2;
+      ctx.fillStyle = '#fff';
+      drawRoundedRect(ctx, qx, qy, qw, qh, 8); ctx.fill();
+      ctx.restore();
+      ctx.strokeStyle = '#ebe1f0'; ctx.lineWidth = 1.5;
+      drawRoundedRect(ctx, qx, qy, qw, qh, 8); ctx.stroke();
+      ctx.fillStyle = '#7c5fb6';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(qtxt, qx + qw / 2, qy + qh / 2 + 1);
     }
   }
 
@@ -2274,9 +2290,14 @@ async function exportImages(build) {
     // 绘制备注框
     const nx = PAD_X, ny = y;
     const nh = 24 + lines.length * NOTES_LINE_H + 24;
+    ctx.save();
+    ctx.shadowColor = 'rgba(124,95,182,0.18)';
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetY = 4;
     ctx.fillStyle = '#fff';
     drawRoundedRect(ctx, nx, ny, CW, nh, 12);
     ctx.fill();
+    ctx.restore();
     // 文字
     ctx.fillStyle = '#2c2138';
     ctx.font = `${MARKER_NOTE_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
@@ -2477,9 +2498,14 @@ async function exportImages(build) {
         }
         // Draw list box
         const nx = PAD_X, ny = y;
+        ctx.save();
+        ctx.shadowColor = 'rgba(124,95,182,0.18)';
+        ctx.shadowBlur = 12;
+        ctx.shadowOffsetY = 4;
         ctx.fillStyle = '#faf5fc';
         drawRoundedRect(ctx, nx, ny, CW, totalH, 12);
         ctx.fill();
+        ctx.restore();
         // Items
         let cy = ny + 16;
         noteItems.forEach((it, i) => {
