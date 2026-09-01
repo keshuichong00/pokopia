@@ -325,6 +325,31 @@
     gap: 8px;
   }
   @media (max-width: 768px) { .item-grid { grid-template-columns: repeat(4, 1fr); } }
+
+  /* ===== 移动端适配（手机窄屏） ===== */
+  @media (max-width: 768px) {
+    .topbar { padding: 10px 12px; gap: 10px; }
+    .topbar .logo { font-size: 15px; }
+    .topbar .logo-icon { font-size: 18px; }
+    .topbar .crumb { display: none; }              /* 手机隐藏面包屑，避免挤压操作区 */
+    .topbar .actions { flex-wrap: wrap; }
+    .container { padding: 12px; }
+    .editor-panel { padding: 14px; }
+    .section-card { padding: 14px; margin-bottom: 18px; }
+    .editor-row { gap: 8px; }
+    .editor-row input[type="text"] { min-width: 0; width: 100%; }  /* 输入框占满整行，label 自动换行到上方 */
+    .modal { max-height: 92vh; }
+    .modal-header { flex-wrap: wrap; }
+    .modal-header .search-box { flex: 1 1 100%; order: 3; }          /* 搜索框在手机占满整行 */
+    .btn { padding: 10px 16px; min-height: 40px; }                  /* 触控友好最小高度 */
+  }
+  @media (max-width: 480px) {
+    .topbar .logo { font-size: 14px; }
+    .build-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+    .item-grid { grid-template-columns: repeat(3, 1fr); }
+    .section-preview { width: 100px; height: 67px; }
+    .cover-uploader { width: 120px; height: 90px; }
+  }
   .item-cell {
     background: white;
     border: 1px solid var(--border);
