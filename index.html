@@ -2025,10 +2025,10 @@ async function exportImages(build) {
   const CW = EXPORT_W - PAD_X * 2;   // 内容宽度 (1460)
   const TITLE_BAR_H = 100;            // 顶部标题栏高度 (附件1的细长栏)
   const TITLE_GAP = 40;               // 标题栏与主内容间距
-  const COLS = 4;                     // 4 列更透气（原 5 列偏满）
-  const CELL_W = 290;                 // 4 列时卡片加宽，间隙 100（整数，消除半像素描边发虚）
+  const COLS = 5;                     // 每行 5 个道具
+  const CELL_W = 248;                 // 5 列，卡片较窄，间隙 55（整数，消除半像素描边发虚）
   const CELL_GAP = (CW - COLS * CELL_W) / (COLS - 1);
-  const ICON_SIZE = 200;              // 图标尺寸（4 列下放大到 200，更清晰）
+  const ICON_SIZE = 150;              // 图标尺寸（5 列下 150，卡片更矮更透气）
   const NAME_FONT = 36;               // 道具名字号
   const NAME_LINE_H = 48;                  // 1.33×字号(36px)，对齐编辑器 1.3 舒适行高（原 42=1.17 偏挤）
   const NAME_MAX_LINES = 3;           // 道具名最多 3 行（超长名不再被 '…' 截断）
