@@ -2543,7 +2543,7 @@ async function exportImages(build) {
       const tw = cctx.measureText(authorText).width;
       const nbw = tw + 56;
       const nbx = hasAvatar ? (PAD_X + AV + NB_GAP) : PAD_X;
-      const nbY = avTop + (AV - NB_H) / 2;            // 与头像垂直居中对齐
+      const nbY = avBottom - NB_H;                    // 名字块底与头像底同齐，均距底 5px
       cctx.fillStyle = '#ff8a3d';                     // 橙色圆角底块
       drawRoundedRect(cctx, nbx, nbY, nbw, NB_H, 14);
       cctx.fill();
