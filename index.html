@@ -2530,7 +2530,7 @@ async function exportImages(build) {
     cctx.textBaseline = 'middle';
 
     // --- 作者块（左下角）：头像单独出现（无橙色框），@名字在旁独立橙色块 ---
-    const AV = 200;                                   // 头像直径（放大 2 倍）
+    const AV = 150;                                   // 头像直径
     const hasAvatar = !!(build.avatar && imgCache[build.avatar]);
     const NB_GAP = 20;                                // 头像与名字块的间距
     const NB_H = 56;                                  // 名字块高度
@@ -2543,7 +2543,7 @@ async function exportImages(build) {
       const tw = cctx.measureText(authorText).width;
       const nbw = tw + 56;
       const nbx = hasAvatar ? (PAD_X + AV + NB_GAP) : PAD_X;
-      const nbY = avBottom - NB_H;                    // 名字块底与头像底同齐，均距底 5px
+      const nbY = avBottom - (AV + NB_H) / 2;         // 名字块与头像垂直居中对齐（水平对齐）
       cctx.fillStyle = '#ff8a3d';                     // 橙色圆角底块
       drawRoundedRect(cctx, nbx, nbY, nbw, NB_H, 14);
       cctx.fill();
