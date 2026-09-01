@@ -2529,21 +2529,25 @@ async function exportImages(build) {
     cctx.save();
     cctx.textBaseline = 'middle';
 
-    // --- 作者块（左下角）：头像单独出现（无橙色框），@名字在旁独立橙色块 ---
-    const AV = 150;                                   // 头像直径
+    // --- 作者块（左下角）：头像单独出现（无橙色框 + 白色包边），@名字在旁独立橙色块 ---
+    const AV = 120;                                   // 头像内容直径
+    const WB = 10;                                    // 白色包边厚度（半径方向）
     const hasAvatar = !!(build.avatar && imgCache[build.avatar]);
     const NB_GAP = 20;                                // 头像与名字块的间距
     const NB_H = 56;                                  // 名字块高度
-    const avBottom = EXPORT_H - 5;                    // 头像下沿距底 5px
-    const avTop = avBottom - AV;
-    // 名字独立橙色块（在头像右侧；无头像时从 PAD_X 起）
+    const outerD = AV + 2 * WB;                       // 头像含白边总直径
+    const oBottom = EXPORT_H - 5;                     // 含白边整体下沿距底 5px
+    const oTop = oBottom - outerD;                    // 含白边整体顶
+    const oCx = PAD_X + outerD / 2;                   // 中心 x
+    const oCy = oTop + outerD / 2;                    // 中心 y（与头像内容同心）
+    // 名字独立橙色块（在头像右侧；无头像时从 PAD_X 起、底部对齐）
     if (build.author && build.author.trim()) {
       const authorText = '@' + build.author.trim();
       cctx.font = `bold 40px "PingFang SC", "Microsoft YaHei", sans-serif`;
       const tw = cctx.measureText(authorText).width;
       const nbw = tw + 56;
-      const nbx = hasAvatar ? (PAD_X + AV + NB_GAP) : PAD_X;
-      const nbY = avBottom - (AV + NB_H) / 2;         // 名字块与头像垂直居中对齐（水平对齐）
+      const nbx = hasAvatar ? (PAD_X + outerD + NB_GAP) : PAD_X;
+      const nbY = hasAvatar ? (oCy - NB_H / 2) : (oBottom - NB_H);  // 有头像：与头像垂直居中；无头像：距底 5px
       cctx.fillStyle = '#ff8a3d';                     // 橙色圆角底块
       drawRoundedRect(cctx, nbx, nbY, nbw, NB_H, 14);
       cctx.fill();
@@ -2552,12 +2556,18 @@ async function exportImages(build) {
       cctx.textBaseline = 'middle';
       cctx.fillText(authorText, nbx + nbw / 2, nbY + NB_H / 2 + 1);
     }
-    // 头像（单独，无橙色框）
+    // 头像（单独，无橙色框）+ 白色包边
     if (hasAvatar) {
-      const ax = PAD_X, ay = avTop, ar = AV / 2;
+      const ax = PAD_X, ay = oTop + WB, ar = AV / 2;
+      // 白色包边（实心圆，直径 = outerD）
+      cctx.fillStyle = '#ffffff';
+      cctx.beginPath();
+      cctx.arc(oCx, oCy, ar + WB, 0, Math.PI * 2);
+      cctx.fill();
+      // 头像内容（裁剪圆形）
       cctx.save();
       cctx.beginPath();
-      cctx.arc(ax + ar, ay + ar, ar, 0, Math.PI * 2);
+      cctx.arc(oCx, oCy, ar, 0, Math.PI * 2);
       cctx.clip();
       cctx.drawImage(imgCache[build.avatar], ax, ay, AV, AV);
       cctx.restore();
