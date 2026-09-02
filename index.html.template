@@ -429,6 +429,15 @@
     overflow: hidden;
     user-select: none;
   }
+  /* 自由页面舞台外层：内部坐标固定 800px，由 JS 用 transform:scale 等比缩放到容器宽度，
+     保证"点击位置"与"标记坐标"在同一缩放下 1:1 对应（修复窄屏坐标错位） */
+  .free-stage-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    overflow: hidden;
+  }
   .free-stage.empty {
     display: flex; align-items: center; justify-content: center;
     cursor: pointer;
@@ -924,6 +933,21 @@ function el(tag, attrs = {}, ...children) {
   return e;
 }
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+// 自由页面：把内部 800px 坐标的舞台等比缩放到外层容器宽度，使点击坐标与标记位置一致
+function fitAllFreeStages(){
+  document.querySelectorAll('.free-stage-wrap').forEach(wrap => {
+    const sw = parseFloat(wrap.dataset.stageW), sh = parseFloat(wrap.dataset.stageH);
+    if (!sw) return;
+    const stage = wrap.firstElementChild;
+    if (!stage) return;
+    const avail = wrap.clientWidth || sw;
+    const scale = Math.min(1, avail / sw);
+    stage.style.transform = 'scale(' + scale + ')';
+    stage.style.transformOrigin = 'top left';
+    wrap.style.height = (sh * scale) + 'px';
+  });
+}
+if (!window._freeStageResizeBound){ window._freeStageResizeBound = true; window.addEventListener('resize', fitAllFreeStages); }
 function toast(msg) {
   const t = $('#toast');
   t.textContent = msg;
@@ -1448,12 +1472,15 @@ function renderFreePageEditor(b, sec, sIdx) {
     if (fp.imgW && fp.imgH && fp.w) {
       fp.h = fp.w * (fp.imgH / fp.imgW);
     }
-    // Fixed stage width 800px (matches viewer)
+    // 内部坐标固定 800px，通过 .free-stage-wrap + transform:scale 等比缩放到容器宽度
+    // （之前用 max-width:100% 直接压窄舞台，但子元素用 800px 坐标，导致点击位置与标记错位）
     const STAGE_W = 800;
     const stageH = Math.round(STAGE_W * (fp.y + fp.h) / 100 + 40);
     stage.style.width = STAGE_W + 'px';
-    stage.style.maxWidth = '100%';
     stage.style.height = stageH + 'px';
+    stage.style.position = 'absolute';
+    stage.style.top = '0';
+    stage.style.left = '0';
     const imgEl = el('div', { class: 'free-image' });
     const imgLeftPx = fp.x / 100 * STAGE_W;
     const imgTopPx = fp.y / 100 * STAGE_W;
@@ -1493,14 +1520,15 @@ function renderFreePageEditor(b, sec, sIdx) {
     let dragStart = null;
     let movedDuringDrag = false;
     let dragStartClient = null;
-    // 在 client 坐标位置添加标记（仅当落在图片范围内）
+    let suppressClick = false; // 触屏 pointerup 已加标记时，吞掉随即合成的 click，避免重复添加
+    // 在 client 坐标位置添加标记（仅当落在图片范围内）；返回是否真正添加了标记
     const addMarkerAtClient = (clientX, clientY) => {
       const rect = stage.getBoundingClientRect();
       const clickX = (clientX - rect.left) / rect.width;
       const clickY = (clientY - rect.top) / rect.height;
       const imgX1 = fp.x / 100, imgY1 = fp.y / 100;
       const imgX2 = (fp.x + fp.w) / 100, imgY2 = (fp.y + fp.h) / 100;
-      if (clickX < imgX1 || clickX > imgX2 || clickY < imgY1 || clickY > imgY2) return;
+      if (clickX < imgX1 || clickX > imgX2 || clickY < imgY1 || clickY > imgY2) return false;
       const rx = (clickX - imgX1) / (imgX2 - imgX1);
       const ry = (clickY - imgY1) / (imgY2 - imgY1);
       sec.markers = sec.markers || [];
@@ -1510,6 +1538,7 @@ function renderFreePageEditor(b, sec, sIdx) {
         const tas = document.querySelectorAll('.free-marker-item textarea');
         if (tas[sec.markers.length - 1]) tas[sec.markers.length - 1].focus();
       }, 100);
+      return true;
     };
     const onMove = e => {
       if (!dragMode) return;
@@ -1543,7 +1572,7 @@ function renderFreePageEditor(b, sec, sIdx) {
       document.removeEventListener('pointerup', onUp);
       // 触屏：轻点图片(几乎未移动)视为在该位置加标记；桌面仍走 click，避免重复
       if (wasMove && !didMove && e.pointerType === 'touch' && dragStartClient) {
-        addMarkerAtClient(upX, upY);
+        if (addMarkerAtClient(upX, upY)) suppressClick = true;
       }
     };
     const startDrag = (mode, e) => {
@@ -1566,13 +1595,20 @@ function renderFreePageEditor(b, sec, sIdx) {
 
     // === Click to add marker (桌面；触屏轻点由 onUp 处理) ===
     stage.addEventListener('click', e => {
+      // 触屏 pointerup 已加过标记，浏览器随即合成的 click 直接吞掉，避免重复添加
+      if (suppressClick) { suppressClick = false; return; }
       if (e.target.classList.contains('free-marker') ||
           e.target.classList.contains('free-resize-handle')) return;
       addMarkerAtClient(e.clientX, e.clientY);
     });
   }
 
-  card.appendChild(stage);
+  const stageWrap = el('div', { class: 'free-stage-wrap' });
+  stageWrap.dataset.stageW = STAGE_W;
+  stageWrap.dataset.stageH = stageH;
+  stageWrap.appendChild(stage);
+  card.appendChild(stageWrap);
+  requestAnimationFrame(fitAllFreeStages);
 
   // Controls below stage
   if (sec.freePage) {
@@ -1903,7 +1939,9 @@ function renderFreePageViewer(sec) {
     const stage = el('div', { class: 'viewer-free-stage' });
     stage.style.width = STAGE_W + 'px';
     stage.style.height = stageH + 'px';
-    stage.style.maxWidth = '100%';
+    stage.style.position = 'absolute';
+    stage.style.top = '0';
+    stage.style.left = '0';
     // Image: position in % of stage, but stage is STAGE_W wide so 1% = 8px
     const imgEl = el('div', { class: 'viewer-free-image' });
     imgEl.style.left = (fp.x / 100 * STAGE_W) + 'px';
@@ -1925,7 +1963,12 @@ function renderFreePageViewer(sec) {
       m.title = mk.note || '';
       stage.appendChild(m);
     });
-    s.appendChild(stage);
+    const stageWrap = el('div', { class: 'free-stage-wrap' });
+    stageWrap.dataset.stageW = STAGE_W;
+    stageWrap.dataset.stageH = stageH;
+    stageWrap.appendChild(stage);
+    s.appendChild(stageWrap);
+    requestAnimationFrame(fitAllFreeStages);
     // Marker notes list
     const notes = (sec.markers || []).filter(mk => mk.note && mk.note.trim());
     if (notes.length > 0) {
