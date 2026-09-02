@@ -830,6 +830,10 @@
 <div class="toast" id="toast"></div>
 
 <script>
+/*#__INLINE_JSZIP__*/
+</script>
+
+<script>
 // ===== Embedded Items Data (1697) =====
 const ITEMS_RAW = /*#__INLINE_ITEMS__*/null;
 
@@ -2664,34 +2668,39 @@ async function exportImages(build) {
     cctx.restore();
   });
 
-  // === 4. 下载（toBlob + blob URL + appendChild：手机端更可靠） ===
-  // 根因：data:image/png;base64,... 形式的 data URL 在手机 Chrome 上下载超大 PNG 不可靠，
-  //       且 a 不挂到 DOM 直接 .click() 在触屏 WebView 下偶尔静默失败。
-  // 修复：toBlob 生成 PNG 二进制，a 挂到 body 再 click，每张间隔给手机浏览器处理时间。
-  if (pages.length > 1) toast('正在下载 ' + pages.length + ' 张图片，请允许每次下载…');
+  // === 4. 下载：把所有页打包成单个 ZIP 一次下载（治本：手机必定拿到全部攻略） ===
+  // 根因：手机 Chrome 对连续多个 <a download> 仍可能只下首张/丢页；data URL 大 PNG 也不可靠。
+  // 治本：JSZip 把所有页打成单 .zip，一次下载 → 解压即多张 PNG，保留分页语义。
+  // 压缩方式 STORE：PNG 已压缩，STORE 不再压，省 CPU/时间，体积不变。
+  if (!window.JSZip) { toast('打包组件未就绪'); return; }
   const dlName = (build.name || '材料单');
+  toast('正在打包 ' + pages.length + ' 张图片…');
+  const zip = new JSZip();
   for (let i = 0; i < pages.length; i++) {
-    const cv = pages[i];
-    const fname = dlName + '_' + (i + 1) + '.png';
-    await new Promise(resolve => {
-      const go = (href) => {
-        const a = document.createElement('a');
-        a.href = href;
-        a.download = fname;
-        a.style.display = 'none';
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-          try { a.remove(); } catch (_) {}
-          if (href.startsWith('blob:')) URL.revokeObjectURL(href);
-          resolve();
-        }, 700);
-      };
-      cv.toBlob(b => { if (b) go(URL.createObjectURL(b)); else go(cv.toDataURL('image/png')); }, 'image/png');
+    const buf = await new Promise(resolve => {
+      pages[i].toBlob(async b => {
+        if (b) resolve(new Uint8Array(await b.arrayBuffer()));
+        else {
+          // toBlob 失败兜底：toDataURL → atob 解码
+          const du = pages[i].toDataURL('image/png');
+          const bin = atob(du.split(',')[1]);
+          const u8 = new Uint8Array(bin.length);
+          for (let k = 0; k < bin.length; k++) u8[k] = bin.charCodeAt(k);
+          resolve(u8);
+        }
+      }, 'image/png');
     });
-    await new Promise(r => setTimeout(r, 250));
+    zip.file(dlName + '_' + (i + 1) + '.png', buf);
   }
-  toast('已导出 ' + pages.length + ' 张图片 ✓');
+  const blob = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = dlName + '.zip';
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { try { a.remove(); } catch (_) {} URL.revokeObjectURL(a.href); }, 1500);
+  toast('已导出 ' + pages.length + ' 张图片（ZIP）✓');
 }
 
 // ===== Init =====

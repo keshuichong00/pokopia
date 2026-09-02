@@ -49,6 +49,10 @@ for var, cache in [("__INLINE_BG1__", "bg1.b64"), ("__INLINE_BG2__", "bg2.b64"),
         ext = "jpeg" if cache.startswith("bg") else "png"
         result = result.replace(f"/*#{var}*/''", f'"data:image/{ext};base64,{b64}"')
 
+# 注入 JSZip 库（保证离线可用，无 CDN 依赖；用于打包导出 ZIP）
+jszip_src = (base / "jszip.inline.js").read_text(encoding="utf-8")
+result = result.replace("/*#__INLINE_JSZIP__*/", jszip_src)
+
 # 5. 写出
 out = base / "index-offline.html"
 out.write_text(result, encoding="utf-8")
