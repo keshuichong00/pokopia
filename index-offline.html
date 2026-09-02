@@ -1407,6 +1407,10 @@ function renderFreePageEditor(b, sec, sIdx) {
 
   // Stage
   const stage = el('div', { class: 'free-stage' + (sec.freePage ? '' : ' empty') });
+  // 内部固定 800px 坐标系：函数级作用域，确保自由页面尚未上传图（freePage 为 null）时
+  // 下方 stageWrap 仍能用 STAGE_W/stageH，避免 ReferenceError 导致整页渲染中断
+  const STAGE_W = 800;
+  let stageH = 480; // 占位态默认高度；有图时在 if(sec.freePage) 块内覆盖
   // Set aspect ratio based on image
   if (sec.freePage) {
     // Compute stage aspect: maintain image aspect, but allow some default if no image
@@ -1474,8 +1478,8 @@ function renderFreePageEditor(b, sec, sIdx) {
     }
     // 内部坐标固定 800px，通过 .free-stage-wrap + transform:scale 等比缩放到容器宽度
     // （之前用 max-width:100% 直接压窄舞台，但子元素用 800px 坐标，导致点击位置与标记错位）
-    const STAGE_W = 800;
-    const stageH = Math.round(STAGE_W * (fp.y + fp.h) / 100 + 40);
+    // STAGE_W 已提升为函数级（见上方）；此处仅覆盖 stageH
+    stageH = Math.round(STAGE_W * (fp.y + fp.h) / 100 + 40);
     stage.style.width = STAGE_W + 'px';
     stage.style.height = stageH + 'px';
     stage.style.position = 'absolute';
