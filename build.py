@@ -20,10 +20,6 @@ result = result.replace("/*#__INLINE_BG2__*/''", '"data:image/jpeg;base64,' + bg
 logo_b64 = (base / "logo.b64").read_text().strip()
 result = result.replace("/*#__INLINE_LOGO__*/''", '"data:image/png;base64,' + logo_b64 + '"')
 
-# 注入 JSZip 库（保证离线可用，无 CDN 依赖；用于打包导出 ZIP）
-jszip_src = (base / "jszip.inline.js").read_text(encoding="utf-8")
-result = result.replace("/*#__INLINE_JSZIP__*/", jszip_src)
-
 out = base / "index.html"
 out.write_text(result, encoding="utf-8")
 print(f"✓ 生成: {out}")
