@@ -2664,14 +2664,32 @@ async function exportImages(build) {
     cctx.restore();
   });
 
-  // === 4. 下载 ===
+  // === 4. 下载（toBlob + blob URL + appendChild：手机端更可靠） ===
+  // 根因：data:image/png;base64,... 形式的 data URL 在手机 Chrome 上下载超大 PNG 不可靠，
+  //       且 a 不挂到 DOM 直接 .click() 在触屏 WebView 下偶尔静默失败。
+  // 修复：toBlob 生成 PNG 二进制，a 挂到 body 再 click，每张间隔给手机浏览器处理时间。
+  if (pages.length > 1) toast('正在下载 ' + pages.length + ' 张图片，请允许每次下载…');
+  const dlName = (build.name || '材料单');
   for (let i = 0; i < pages.length; i++) {
-    const dataUrl = pages[i].toDataURL('image/png');
-    const a = document.createElement('a');
-    a.href = dataUrl;
-    a.download = (build.name || '材料单') + '_' + (i + 1) + '.png';
-    a.click();
-    await new Promise(r => setTimeout(r, 400));
+    const cv = pages[i];
+    const fname = dlName + '_' + (i + 1) + '.png';
+    await new Promise(resolve => {
+      const go = (href) => {
+        const a = document.createElement('a');
+        a.href = href;
+        a.download = fname;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          try { a.remove(); } catch (_) {}
+          if (href.startsWith('blob:')) URL.revokeObjectURL(href);
+          resolve();
+        }, 700);
+      };
+      cv.toBlob(b => { if (b) go(URL.createObjectURL(b)); else go(cv.toDataURL('image/png')); }, 'image/png');
+    });
+    await new Promise(r => setTimeout(r, 250));
   }
   toast('已导出 ' + pages.length + ' 张图片 ✓');
 }
