@@ -1114,9 +1114,11 @@ function importBuild() {
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = 'application/json';
+  // 必须在 DOM 中才能被移动端(Android Chrome/WebView/TWA)弹起文件选择器
+  input.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;pointer-events:none;';
   input.onchange = e => {
     const f = e.target.files[0];
-    if (!f) return;
+    if (!f) { input.remove(); return; }
     const r = new FileReader();
     r.onload = () => {
       try {
@@ -1131,6 +1133,7 @@ function importBuild() {
     };
     r.readAsText(f);
   };
+  document.body.appendChild(input);
   input.click();
 }
 
@@ -1743,14 +1746,17 @@ function uploadImage(cb) {
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = 'image/*';
+  // 必须在 DOM 中才能被移动端(Android Chrome/WebView/TWA)弹起文件选择器
+  input.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;pointer-events:none;';
   input.onchange = e => {
     const f = e.target.files[0];
-    if (!f) return;
-    if (f.size > 5 * 1024 * 1024) { toast('图片超过 5MB'); return; }
+    if (!f) { input.remove(); return; }
+    if (f.size > 5 * 1024 * 1024) { toast('图片超过 5MB'); input.remove(); return; }
     const r = new FileReader();
-    r.onload = () => cb(r.result);
+    r.onload = () => { cb(r.result); input.remove(); };
     r.readAsDataURL(f);
   };
+  document.body.appendChild(input);
   input.click();
 }
 
