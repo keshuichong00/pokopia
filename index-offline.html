@@ -933,19 +933,10 @@ function el(tag, attrs = {}, ...children) {
   return e;
 }
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-// 自由页面：把内部 800px 坐标的舞台等比缩放到外层容器宽度，使点击坐标与标记位置一致
+// 自由页面：现采用响应式 aspect-ratio + 百分比定位，不再需要 transform 缩放；
+// 保留此函数仅为兼容旧调用点（resize 监听），内部已无缩放逻辑。
 function fitAllFreeStages(){
-  document.querySelectorAll('.free-stage-wrap').forEach(wrap => {
-    const sw = parseFloat(wrap.dataset.stageW), sh = parseFloat(wrap.dataset.stageH);
-    if (!sw) return;
-    const stage = wrap.firstElementChild;
-    if (!stage) return;
-    const avail = wrap.clientWidth || sw;
-    const scale = Math.min(1, avail / sw);
-    stage.style.transform = 'scale(' + scale + ')';
-    stage.style.transformOrigin = 'top left';
-    wrap.style.height = (sh * scale) + 'px';
-  });
+  // no-op：舞台与标记均用百分比定位，随容器宽度自动等比缩放，点击坐标基于真实 rect 换算
 }
 if (!window._freeStageResizeBound){ window._freeStageResizeBound = true; window.addEventListener('resize', fitAllFreeStages); }
 function toast(msg) {
@@ -1476,24 +1467,23 @@ function renderFreePageEditor(b, sec, sIdx) {
     if (fp.imgW && fp.imgH && fp.w) {
       fp.h = fp.w * (fp.imgH / fp.imgW);
     }
-    // 内部坐标固定 800px，通过 .free-stage-wrap + transform:scale 等比缩放到容器宽度
-    // （之前用 max-width:100% 直接压窄舞台，但子元素用 800px 坐标，导致点击位置与标记错位）
+    // 内部固定 800px 坐标系（fp.x/y/w/h 均以 800 宽度为基准）。
+    // 改用响应式布局：舞台 width:100% + aspect-ratio 等比缩放，子元素用「百分比」定位，
+    // 点击换算基于舞台真实 getBoundingClientRect，不再依赖 transform:scale，彻底消除窄屏坐标错位。
     // STAGE_W 已提升为函数级（见上方）；此处仅覆盖 stageH
     stageH = Math.round(STAGE_W * (fp.y + fp.h) / 100 + 40);
-    stage.style.width = STAGE_W + 'px';
-    stage.style.height = stageH + 'px';
-    stage.style.position = 'absolute';
-    stage.style.top = '0';
-    stage.style.left = '0';
+    stage.style.aspectRatio = (STAGE_W / stageH);
+    const pX = v => (v / STAGE_W * 100) + '%';  // 800-unit → 占舞台宽度百分比
+    const pY = v => (v / stageH * 100) + '%';    // 800-unit → 占舞台高度百分比（高度=h-stretch 后对应 stageH 单位，二者等比故一致）
     const imgEl = el('div', { class: 'free-image' });
     const imgLeftPx = fp.x / 100 * STAGE_W;
     const imgTopPx = fp.y / 100 * STAGE_W;
     const imgWidthPx = fp.w / 100 * STAGE_W;
     const imgHeightPx = fp.h / 100 * STAGE_W;
-    imgEl.style.left = imgLeftPx + 'px';
-    imgEl.style.top = imgTopPx + 'px';
-    imgEl.style.width = imgWidthPx + 'px';
-    imgEl.style.height = imgHeightPx + 'px';
+    imgEl.style.left = pX(imgLeftPx);
+    imgEl.style.top = pY(imgTopPx);
+    imgEl.style.width = pX(imgWidthPx);
+    imgEl.style.height = pY(imgHeightPx);
     imgEl.appendChild(el('img', { src: fp.image, alt: '自由页面' }));
     // Resize handle
     const handle = el('div', { class: 'free-resize-handle br' });
@@ -1505,8 +1495,8 @@ function renderFreePageEditor(b, sec, sIdx) {
     // Markers on stage (positioned using image bounds)
     (sec.markers || []).forEach((mk, mkIdx) => {
       const marker = el('div', { class: 'free-marker' }, String(mkIdx + 1));
-      marker.style.left = (imgLeftPx + mk.rx * imgWidthPx) + 'px';
-      marker.style.top = (imgTopPx + mk.ry * imgHeightPx) + 'px';
+      marker.style.left = pX(imgLeftPx + mk.rx * imgWidthPx);
+      marker.style.top = pY(imgTopPx + mk.ry * imgHeightPx);
       marker.title = mk.note || '点击编辑说明';
       marker.onclick = e => {
         e.stopPropagation();
@@ -1528,13 +1518,14 @@ function renderFreePageEditor(b, sec, sIdx) {
     // 在 client 坐标位置添加标记（仅当落在图片范围内）；返回是否真正添加了标记
     const addMarkerAtClient = (clientX, clientY) => {
       const rect = stage.getBoundingClientRect();
-      const clickX = (clientX - rect.left) / rect.width;
-      const clickY = (clientY - rect.top) / rect.height;
-      const imgX1 = fp.x / 100, imgY1 = fp.y / 100;
-      const imgX2 = (fp.x + fp.w) / 100, imgY2 = (fp.y + fp.h) / 100;
-      if (clickX < imgX1 || clickX > imgX2 || clickY < imgY1 || clickY > imgY2) return false;
-      const rx = (clickX - imgX1) / (imgX2 - imgX1);
-      const ry = (clickY - imgY1) / (imgY2 - imgY1);
+      // 将点击点换算到 800-unit 坐标系：x 以 STAGE_W 为满宽，y 以 stageH 为满高（二者等比缩放）
+      const clickUx = (clientX - rect.left) / rect.width * STAGE_W;
+      const clickUy = (clientY - rect.top) / rect.height * stageH;
+      const x1 = fp.x / 100 * STAGE_W, x2 = (fp.x + fp.w) / 100 * STAGE_W;
+      const y1 = fp.y / 100 * STAGE_W, y2 = (fp.y + fp.h) / 100 * STAGE_W;
+      if (clickUx < x1 || clickUx > x2 || clickUy < y1 || clickUy > y2) return false;
+      const rx = (clickUx - x1) / (x2 - x1);
+      const ry = (clickUy - y1) / (y2 - y1);
       sec.markers = sec.markers || [];
       sec.markers.push({ rx, ry, note: '' });
       render();
@@ -1941,38 +1932,31 @@ function renderFreePageViewer(sec) {
     // Hmm, easier: just use a stage whose height matches the image's max bounds
     const stageH = STAGE_W * (fp.y + fp.h) / 100 + 40; // +40 padding
     const stage = el('div', { class: 'viewer-free-stage' });
-    stage.style.width = STAGE_W + 'px';
-    stage.style.height = stageH + 'px';
-    stage.style.position = 'absolute';
-    stage.style.top = '0';
-    stage.style.left = '0';
-    // Image: position in % of stage, but stage is STAGE_W wide so 1% = 8px
+    stage.style.aspectRatio = (STAGE_W / stageH);
+    const pX = v => (v / STAGE_W * 100) + '%';
+    const pY = v => (v / stageH * 100) + '%';
     const imgEl = el('div', { class: 'viewer-free-image' });
-    imgEl.style.left = (fp.x / 100 * STAGE_W) + 'px';
-    imgEl.style.top = (fp.y / 100 * STAGE_W) + 'px';
-    imgEl.style.width = (fp.w / 100 * STAGE_W) + 'px';
-    imgEl.style.height = (fp.h / 100 * STAGE_W) + 'px';
-    imgEl.appendChild(el('img', { src: fp.image, alt: '自由页面' }));
-    stage.appendChild(imgEl);
-    // Markers: absolute pixel positions
     const imgLeftPx = fp.x / 100 * STAGE_W;
     const imgTopPx = fp.y / 100 * STAGE_W;
     const imgWidthPx = fp.w / 100 * STAGE_W;
     const imgHeightPx = fp.h / 100 * STAGE_W;
+    imgEl.style.left = pX(imgLeftPx);
+    imgEl.style.top = pY(imgTopPx);
+    imgEl.style.width = pX(imgWidthPx);
+    imgEl.style.height = pY(imgHeightPx);
+    imgEl.appendChild(el('img', { src: fp.image, alt: '自由页面' }));
+    stage.appendChild(imgEl);
     (sec.markers || []).forEach((mk, mkIdx) => {
       const m = el('div', { class: 'viewer-free-marker' }, String(mkIdx + 1));
-      m.style.left = (imgLeftPx + mk.rx * imgWidthPx) + 'px';
-      m.style.top = (imgTopPx + mk.ry * imgHeightPx) + 'px';
+      m.style.left = pX(imgLeftPx + mk.rx * imgWidthPx);
+      m.style.top = pY(imgTopPx + mk.ry * imgHeightPx);
       m.style.transform = 'translate(-50%, -50%)';
       m.title = mk.note || '';
       stage.appendChild(m);
     });
     const stageWrap = el('div', { class: 'free-stage-wrap' });
-    stageWrap.dataset.stageW = STAGE_W;
-    stageWrap.dataset.stageH = stageH;
     stageWrap.appendChild(stage);
     s.appendChild(stageWrap);
-    requestAnimationFrame(fitAllFreeStages);
     // Marker notes list
     const notes = (sec.markers || []).filter(mk => mk.note && mk.note.trim());
     if (notes.length > 0) {
