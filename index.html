@@ -1467,6 +1467,8 @@ function renderFreePageEditor(b, sec, sIdx) {
     // Resize handle
     const handle = el('div', { class: 'free-resize-handle br' });
     imgEl.appendChild(handle);
+    imgEl.style.touchAction = 'none';   // 触屏拖动时禁止页面滚动/缩放，否则拖不动
+    handle.style.touchAction = 'none';
     stage.appendChild(imgEl);
 
     // Markers on stage (positioned using image bounds)
@@ -1486,11 +1488,32 @@ function renderFreePageEditor(b, sec, sIdx) {
     // Hint at bottom
     stage.appendChild(el('div', { class: 'free-marker-hint' }, '点击图片添加标记 · 拖动图片改变位置 · 拖右下角改变大小'));
 
-    // === Drag to move image ===
+    // === Drag to move image (Pointer Events: 同时支持鼠标与触屏) ===
     let dragMode = null; // 'move' | 'resize' | null
     let dragStart = null;
+    let movedDuringDrag = false;
+    let dragStartClient = null;
+    // 在 client 坐标位置添加标记（仅当落在图片范围内）
+    const addMarkerAtClient = (clientX, clientY) => {
+      const rect = stage.getBoundingClientRect();
+      const clickX = (clientX - rect.left) / rect.width;
+      const clickY = (clientY - rect.top) / rect.height;
+      const imgX1 = fp.x / 100, imgY1 = fp.y / 100;
+      const imgX2 = (fp.x + fp.w) / 100, imgY2 = (fp.y + fp.h) / 100;
+      if (clickX < imgX1 || clickX > imgX2 || clickY < imgY1 || clickY > imgY2) return;
+      const rx = (clickX - imgX1) / (imgX2 - imgX1);
+      const ry = (clickY - imgY1) / (imgY2 - imgY1);
+      sec.markers = sec.markers || [];
+      sec.markers.push({ rx, ry, note: '' });
+      render();
+      setTimeout(() => {
+        const tas = document.querySelectorAll('.free-marker-item textarea');
+        if (tas[sec.markers.length - 1]) tas[sec.markers.length - 1].focus();
+      }, 100);
+    };
     const onMove = e => {
       if (!dragMode) return;
+      if (Math.abs(e.clientX - dragStart.x) > 6 || Math.abs(e.clientY - dragStart.y) > 6) movedDuringDrag = true;
       const rect = stage.getBoundingClientRect();
       // x/y/w/h 均以 stage 宽度为基准的百分比，dx/dy 统一除以宽度
       const dx = (e.clientX - dragStart.x) / rect.width * 100;
@@ -1509,48 +1532,43 @@ function renderFreePageEditor(b, sec, sIdx) {
       // Re-render entirely (simpler than partial update)
       render();
     };
-    const onUp = () => { dragMode = null; document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
-    imgEl.addEventListener('mousedown', e => {
+    // 用 Pointer Events 统一鼠标与触屏：mouse* 在手机触屏上完全不触发
+    const onUp = e => {
+      const wasMove = dragMode === 'move';
+      const didMove = movedDuringDrag;
+      const upX = e.clientX, upY = e.clientY;
+      dragMode = null;
+      movedDuringDrag = false;
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      // 触屏：轻点图片(几乎未移动)视为在该位置加标记；桌面仍走 click，避免重复
+      if (wasMove && !didMove && e.pointerType === 'touch' && dragStartClient) {
+        addMarkerAtClient(upX, upY);
+      }
+    };
+    const startDrag = (mode, e) => {
+      dragMode = mode;
+      dragStart = { x: e.clientX, y: e.clientY, fpX: fp.x, fpY: fp.y, fpW: fp.w, fpH: fp.h };
+      dragStartClient = { x: e.clientX, y: e.clientY };
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup', onUp);
+      e.preventDefault();
+    };
+    imgEl.addEventListener('pointerdown', e => {
       if (e.target === handle) return;
-      dragMode = 'move';
-      dragStart = { x: e.clientX, y: e.clientY, fpX: fp.x, fpY: fp.y, fpW: fp.w, fpH: fp.h };
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
-      e.preventDefault();
+      startDrag('move', e);
     });
-    handle.addEventListener('mousedown', e => {
-      dragMode = 'resize';
-      dragStart = { x: e.clientX, y: e.clientY, fpX: fp.x, fpY: fp.y, fpW: fp.w, fpH: fp.h };
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
-      e.preventDefault();
+    handle.addEventListener('pointerdown', e => {
+      startDrag('resize', e);
       e.stopPropagation();
     });
 
-    // === Click to add marker ===
+    // === Click to add marker (桌面；触屏轻点由 onUp 处理) ===
     stage.addEventListener('click', e => {
-      // Ignore clicks on existing markers, resize handle
-      if (e.target.classList.contains('free-marker') || 
+      if (e.target.classList.contains('free-marker') ||
           e.target.classList.contains('free-resize-handle')) return;
-      // Get click position relative to stage
-      const rect = stage.getBoundingClientRect();
-      const clickX = (e.clientX - rect.left) / rect.width;
-      const clickY = (e.clientY - rect.top) / rect.height;
-      // Check if click is within image bounds (in 0-1 range)
-      const imgX1 = fp.x / 100, imgY1 = fp.y / 100;
-      const imgX2 = (fp.x + fp.w) / 100, imgY2 = (fp.y + fp.h) / 100;
-      if (clickX < imgX1 || clickX > imgX2 || clickY < imgY1 || clickY > imgY2) return;
-      // Compute rx, ry relative to image
-      const rx = (clickX - imgX1) / (imgX2 - imgX1);
-      const ry = (clickY - imgY1) / (imgY2 - imgY1);
-      sec.markers = sec.markers || [];
-      sec.markers.push({ rx, ry, note: '' });
-      render();
-      // Focus the new marker's textarea after re-render
-      setTimeout(() => {
-        const tas = document.querySelectorAll('.free-marker-item textarea');
-        if (tas[sec.markers.length - 1]) tas[sec.markers.length - 1].focus();
-      }, 100);
+      addMarkerAtClient(e.clientX, e.clientY);
     });
   }
 
