@@ -125,9 +125,10 @@
   .item-cell .item-dye {
     position: absolute;
     top: 2px; left: 2px;
-    width: 22px; height: 22px;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
+    min-width: 22px; height: 22px;
+    padding: 3px 5px;
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center; gap: 3px;
     font-size: 11px;
     background: rgba(255,255,255,0.95);
     border: 1.5px solid rgba(0,0,0,0.15);
@@ -136,12 +137,18 @@
     transition: transform 0.15s, box-shadow 0.15s;
   }
   .item-cell .item-dye:hover {
-    transform: scale(1.15);
+    transform: scale(1.12);
     box-shadow: 0 2px 6px rgba(0,0,0,0.2);
   }
   .item-cell .item-dye.dyed {
     border-color: rgba(0,0,0,0.35);
     box-shadow: 0 0 0 2px rgba(255,255,255,0.9);
+  }
+  .item-cell .item-dye-swatch {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,0,0,0.25);
+    box-sizing: border-box;
   }
   .item-cell .item-name .item-dye-indicator {
     display: inline-block;
@@ -201,6 +208,15 @@
   .dye-picker-cell.selected {
     border-color: var(--primary-dark);
     box-shadow: 0 0 0 3px rgba(124,95,182,0.3);
+  }
+  .dye-picker-cell .dye-pick-check {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    font-size: 15px; font-weight: 700;
+    text-shadow: 0 0 3px rgba(0,0,0,0.7);
+    pointer-events: none;
   }
   .dye-picker-cell .name {
     position: absolute;
@@ -879,6 +895,12 @@ const DYE_COLORS = [
 ];
 const DYE_BY_ID = {};
 DYE_COLORS.forEach(d => { DYE_BY_ID[d.id] = d; });
+// 获取物品的染色列表（最多 2 个）。兼容旧数据：item.color（单色）→ 视为 [color]
+function getDyes(item) {
+  if (Array.isArray(item.dyes)) return item.dyes.filter(Boolean);
+  if (item.color) return [item.color];
+  return [];
+}
 
 // 解析成便于查询的结构
 const ITEMS = ITEMS_RAW.map(r => ({
@@ -1316,25 +1338,28 @@ function renderSectionEditor(b, sec, sIdx) {
     icon.appendChild(el('img', { src: it.image, loading: 'lazy' }));
     cell.appendChild(icon);
     const nameEl = el('div', { class: 'item-name' }, it.nameZh);
-    // 染色指示点
-    if (item.color && DYE_BY_ID[item.color]) {
-      nameEl.appendChild(el('span', { class: 'item-dye-indicator', style: { background: DYE_BY_ID[item.color].color }, title: '已染色: ' + DYE_BY_ID[item.color].name }));
-    }
+    // 染色指示点（可能多个）
+    getDyes(item).forEach(did => {
+      if (DYE_BY_ID[did]) nameEl.appendChild(el('span', { class: 'item-dye-indicator', style: { background: DYE_BY_ID[did].color }, title: '已染色: ' + DYE_BY_ID[did].name }));
+    });
     cell.appendChild(nameEl);
     if ((item.qty || 1) > 1) {
       cell.appendChild(el('div', { class: 'item-qty' }, '×' + (item.qty || 1)));
     }
-    // 染色按钮（左上角）
-    const dyeBtn = el('div', { class: 'item-dye' + (item.color ? ' dyed' : ''), title: item.color ? '已染色：' + (DYE_BY_ID[item.color]?.name || '') + '（点击修改）' : '染色' });
-    if (item.color && DYE_BY_ID[item.color]) {
-      const d = DYE_BY_ID[item.color];
-      dyeBtn.style.background = d.color;
-      // 浅色加边框增强对比
-      if (['white', 'beige', 'yellow', 'pink', 'lime', 'aquamarine'].includes(d.id)) {
-        dyeBtn.style.borderColor = 'rgba(0,0,0,0.35)';
-      }
+    // 染色按钮（左上角，可显示 1~2 个染色）
+    const dyes = getDyes(item);
+    const dyeBtn = el('div', { class: 'item-dye' + (dyes.length ? ' dyed' : ''), title: dyes.length ? '已染色：' + dyes.map(d => DYE_BY_ID[d]?.name || '').join(' + ') + '（点击修改）' : '染色' });
+    if (dyes.length) {
+      dyes.forEach(did => {
+        const d = DYE_BY_ID[did];
+        const sw = el('div', { class: 'item-dye-swatch' });
+        sw.style.background = d.color;
+        // 浅色加边框增强对比
+        if (['white', 'beige', 'yellow', 'pink', 'lime', 'aquamarine'].includes(d.id)) sw.style.borderColor = 'rgba(0,0,0,0.35)';
+        dyeBtn.appendChild(sw);
+      });
       // 右上角小×表示可清除
-      const clearMark = el('div', { class: 'item-dye-clear-x', onclick: e => { e.stopPropagation(); delete sec.items[iIdx].color; render(); }, title: '清除染色' }, '×');
+      const clearMark = el('div', { class: 'item-dye-clear-x', onclick: e => { e.stopPropagation(); const t = sec.items[iIdx]; t.dyes = []; if (t.color) delete t.color; render(); }, title: '清除染色' }, '×');
       dyeBtn.appendChild(clearMark);
     } else {
       dyeBtn.textContent = '🎨';
@@ -1674,7 +1699,7 @@ function renderFreePageEditor(b, sec, sIdx) {
   return card;
 }
 
-// ===== 染色选择器 =====
+// ===== 染色选择器（多选，最多 2 个）=====
 let _dyePickerContext = null; // {sectionIdx, itemIdx}
 function openDyePicker(b, sec, iIdx) {
   // 找到 section 的全局索引（picker callback 需要）
@@ -1682,39 +1707,59 @@ function openDyePicker(b, sec, iIdx) {
   if (sIdx < 0) return;
   _dyePickerContext = { sectionIdx: sIdx, itemIdx: iIdx };
 
+  const MAX_DYES = 2;
+  let sel = getDyes(sec.items[iIdx]).slice(0, MAX_DYES); // 当前已选（id 数组，最多 2）
+  const syncSelection = () => {
+    overlay.querySelectorAll('.dye-picker-cell').forEach(c => {
+      const id = DYE_COLORS.find(x => x.name === c.title)?.id;
+      const on = id && sel.includes(id);
+      c.classList.toggle('selected', !!on);
+      const chk = c.querySelector('.dye-pick-check');
+      if (on && !chk) c.appendChild(el('div', { class: 'dye-pick-check' }, '✓'));
+      if (!on && chk) chk.remove();
+    });
+    counter.textContent = `已选 ${sel.length} / ${MAX_DYES} · 对应 Pokopia 游戏的 18 种彩色气球颜色`;
+  };
+
   const overlay = el('div', { class: 'dye-picker-overlay' });
   const picker = el('div', { class: 'dye-picker' });
-  picker.appendChild(el('h3', {}, '🎨 选择染色颜色'));
-  picker.appendChild(el('div', { class: 'hint' }, '对应 Pokopia 游戏的 18 种彩色气球颜色'));
+  picker.appendChild(el('h3', {}, '🎨 选择染色（最多 2 个）'));
+  const counter = el('div', { class: 'hint' }, `已选 ${sel.length} / ${MAX_DYES} · 对应 Pokopia 游戏的 18 种彩色气球颜色`);
+  picker.appendChild(counter);
   const grid = el('div', { class: 'dye-picker-grid' });
-  const currentColor = sec.items[iIdx]?.color;
   DYE_COLORS.forEach(d => {
-    const cell = el('div', { class: 'dye-picker-cell' + (currentColor === d.id ? ' selected' : ''), title: d.name });
+    const cell = el('div', { class: 'dye-picker-cell' + (sel.includes(d.id) ? ' selected' : ''), title: d.name });
     cell.style.background = d.color;
     cell.appendChild(el('span', { class: 'name' }, d.name));
+    if (sel.includes(d.id)) cell.appendChild(el('div', { class: 'dye-pick-check' }, '✓'));
     cell.onclick = () => {
-      const ctx = _dyePickerContext;
-      const target = state.draftBuild.sections[ctx.sectionIdx].items[ctx.itemIdx];
-      target.color = d.id;
-      overlay.remove();
-      render();
-      toast('已染色：' + d.name + ' 🎨');
+      const idx = sel.indexOf(d.id);
+      if (idx >= 0) {
+        sel.splice(idx, 1);                 // 再次点击取消
+      } else {
+        if (sel.length >= MAX_DYES) { toast('最多选择 ' + MAX_DYES + ' 个染色'); return; }
+        sel.push(d.id);
+      }
+      syncSelection();
     };
     grid.appendChild(cell);
   });
   picker.appendChild(grid);
   const footer = el('div', { class: 'dye-picker-footer' });
-  const clearBtn = el('button', { class: 'btn btn-ghost', onclick: () => {
+  const clearBtn = el('button', { class: 'btn btn-ghost', onclick: () => { sel = []; syncSelection(); } }, '✕ 清除全部');
+  const cancelBtn = el('button', { class: 'btn btn-secondary', onclick: () => overlay.remove() }, '取消');
+  const okBtn = el('button', { class: 'btn btn-primary', onclick: () => {
     const ctx = _dyePickerContext;
     const target = state.draftBuild.sections[ctx.sectionIdx].items[ctx.itemIdx];
-    delete target.color;
+    target.dyes = sel.slice();
+    if (sel.length === 0 && target.color) delete target.color;
     overlay.remove();
     render();
-    toast('已清除染色');
-  } }, '✕ 清除染色');
-  const cancelBtn = el('button', { class: 'btn btn-secondary', onclick: () => overlay.remove() }, '取消');
+    toast(sel.length ? ('已染色：' + sel.map(id => DYE_BY_ID[id].name).join(' + ') + ' 🎨') : '已清除染色');
+  } }, '确定');
   footer.appendChild(clearBtn);
   footer.appendChild(cancelBtn);
+  footer.appendChild(okBtn);
   picker.appendChild(footer);
   overlay.appendChild(picker);
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
@@ -1894,10 +1939,10 @@ function renderMaterialGrid(items) {
     icon.appendChild(el('img', { src: meta.image, loading: 'lazy' }));
     cell.appendChild(icon);
     const nameEl = el('div', { class: 'item-name' }, meta.nameZh);
-    // 染色指示点（view 时显示）
-    if (it.color && DYE_BY_ID[it.color]) {
-      nameEl.appendChild(el('span', { class: 'item-dye-indicator', style: { background: DYE_BY_ID[it.color].color }, title: '已染色: ' + DYE_BY_ID[it.color].name }));
-    }
+    // 染色指示点（view 时显示，可能多个）
+    getDyes(it).forEach(did => {
+      if (DYE_BY_ID[did]) nameEl.appendChild(el('span', { class: 'item-dye-indicator', style: { background: DYE_BY_ID[did].color }, title: '已染色: ' + DYE_BY_ID[did].name }));
+    });
     cell.appendChild(nameEl);
     if ((it.qty || 1) > 1) {
       cell.appendChild(el('div', { class: 'item-qty' }, '×' + (it.qty || 1)));
@@ -2263,24 +2308,29 @@ async function exportImages(build) {
       lastLineY = nameStartY + lineIdx * NAME_LINE_H;
       ctx.fillText(line, cx + CELL_W / 2, lastLineY);
     }
-    // 染色标记：卡片左上角彩色圆点（白环+深色描边，醒目，与编辑器一致），不再压在文字末尾
-    if (item.color && DYE_BY_ID[item.color]) {
-      const dColor = DYE_BY_ID[item.color].color;
+    // 染色标记：卡片左上角彩色圆点（白环+深色描边，醒目，与编辑器一致），支持 1~2 个
+    const expDyes = getDyes(item);
+    if (expDyes.length) {
       const dotR = 16;                       // 直径 32px，明显大于原 20px
-      const dotX = cx + dotR + 6, dotY = cy + dotR + 6;   // 左上角、距边 6px
-      // 白色外环：在任何图标底色上都跳出
-      ctx.beginPath();
-      ctx.arc(dotX, dotY, dotR + 2, 0, Math.PI * 2);
-      ctx.fillStyle = '#fff';
-      ctx.fill();
-      // 染色色圆
-      ctx.beginPath();
-      ctx.arc(dotX, dotY, dotR, 0, Math.PI * 2);
-      ctx.fillStyle = dColor;
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(0,0,0,0.5)';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
+      const gap = dotR * 2 + 6;              // 两个圆点中心间距
+      const baseX = cx + dotR + 6, dotY = cy + dotR + 6;  // 左上角、距边 6px
+      expDyes.slice(0, 2).forEach((did, di) => {
+        const dColor = DYE_BY_ID[did]?.color || '#cccccc';
+        const dotX = baseX + di * gap;
+        // 白色外环：在任何图标底色上都跳出
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, dotR + 2, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff';
+        ctx.fill();
+        // 染色色圆
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, dotR, 0, Math.PI * 2);
+        ctx.fillStyle = dColor;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      });
     }
     // Qty（×N）：右上角白底圆角 chip，提升可读性（不压图标）
     const qty = item.qty || 1;
