@@ -943,7 +943,17 @@ function saveBuilds(builds) {
 
 // ===== 云端实时同步（Firebase Realtime DB，可选；配置为空 / SDK 未加载则仅本地）=====
 // 粘贴你的 Firebase 配置即可开启跨设备实时同步（在 https 在线网址下生效；file:// 本地双击无法用匿名登录，自动降级）
-const FIREBASE_CONFIG = null; // TODO: { apiKey, authDomain, databaseURL, projectId, appId }
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCwLU9Ukh9WwIgYxKek_4jToJ8CbSXs-wE",
+  authDomain: "pokopia-43d0d.firebaseapp.com",
+  projectId: "pokopia-43d0d",
+  storageBucket: "pokopia-43d0d.firebasestorage.app",
+  messagingSenderId: "861406412915",
+  appId: "1:861406412915:web:a96afbf8382cce043caa06"
+  // 注：databaseURL 由 initSync 按 projectId 自动推断默认全局库；
+  // 若你的 Realtime Database 是区域化地址（带 asia-southeast1 等后缀），
+  // 请在此补一行 databaseURL: "https://pokopia-43d0d-default-rtdb.<区域>.firebasedatabase.app"
+};
 let _sync = { enabled: false, db: null, applying: false, lastPushTs: 0 };
 function setSyncStatus(kind) {
   const chip = document.getElementById('syncChip');
@@ -989,7 +999,12 @@ async function initSync() {
     setSyncStatus('local'); return false;
   }
   try {
-    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    // 自动推断 databaseURL（配置中缺失时）：默认全局库地址
+    const _cfg = Object.assign({}, FIREBASE_CONFIG);
+    if (!_cfg.databaseURL && _cfg.projectId) {
+      _cfg.databaseURL = 'https://' + _cfg.projectId + '-default-rtdb.firebaseio.com';
+    }
+    if (!firebase.apps.length) firebase.initializeApp(_cfg);
     await firebase.auth().signInAnonymously();
     _sync.db = firebase.database();
     _sync.enabled = true;
