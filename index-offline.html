@@ -1045,6 +1045,14 @@ function imgSrc(token) {
   if (token.startsWith('img_')) return _imgCache[token] || '';
   return token;
 }
+// 同步解析（与 imgSrc 相同，但返回值无 'data:'/'http' 前缀时统一返回 null 用于显式判断图片是否就绪）
+function imgResolved(token) {
+  if (!token) return null;
+  if (token.startsWith('data:')) return token;
+  if (token.startsWith('http')) return token;
+  if (token.startsWith('img_')) return _imgCache[token] || null;
+  return null;
+}
 // 把 builds 里所有 base64 迁到 IndexedDB，字段值替换为 imgId。返回迁移计数。
 async function migrateOldBuilds(builds) {
   if (!builds || typeof builds !== 'object') return { migrated: 0 };
@@ -1424,7 +1432,7 @@ function renderHome(app) {
       const card = el('div', { class: 'build-card', onclick: () => navigate('viewer', { buildId: b.id }) });
       const cover = el('div', { class: 'cover' });
       if (b.cover) {
-        cover.appendChild(el('img', { src: b.cover, alt: b.name }));
+        cover.appendChild(el('img', { src: imgSrc(b.cover), alt: b.name }));
       } else {
         cover.textContent = '🏠';
       }
@@ -1544,9 +1552,7 @@ function _removeUserPreset(presetId) {
 // 选择一个预设应用到当前 build（同步显示在上面的头像框）
 async function _pickPreset(dataUrl) {
   const b = state.draftBuild; if (!b) return;
-  // addImage 先把图存到 IndexedDB 内存缓存（即便后续没有 img_xxx 重构，dataUrl 仍能渲染）
-  try { await addImage(dataUrl); } catch (e) {}
-  b.avatar = dataUrl;  // 直接用 dataUrl（与其他上传分支保持一致）
+  b.avatar = await addImage(dataUrl);  // 转成 imgId 引用，dataUrl 同时进 IndexedDB 内存缓存
   saveBuilds(state.builds);
   render();
 }
@@ -1570,11 +1576,11 @@ function renderEditor(app) {
   avatarRow.appendChild(el('label', {}, '作者头像'));
   const avatarEl = el('div', { class: 'avatar-uploader' });
   if (b.avatar) {
-    avatarEl.appendChild(el('img', { src: b.avatar }));
+    avatarEl.appendChild(el('img', { src: imgSrc(b.avatar) }));
   } else {
     avatarEl.appendChild(document.createTextNode('点击上传'));
   }
-  avatarEl.onclick = () => uploadImage(dataUrl => { b.avatar = dataUrl; render(); });
+  avatarEl.onclick = () => uploadImage(async dataUrl => { b.avatar = await addImage(dataUrl); saveBuilds(state.builds); render(); });
   avatarRow.appendChild(avatarEl);
   if (b.avatar) {
     avatarRow.appendChild(el('button', { class: 'btn btn-sm btn-ghost', onclick: () => { b.avatar = ''; render(); } }, '移除头像'));
@@ -1617,9 +1623,9 @@ function renderEditor(app) {
   }
   // "+ 上传为常用"按钮：点击后从剪贴板/本地选一张，加入常用
   const addCell = el('div', { class: 'avatar-preset avatar-preset-add', title: '从本机选择一张图，加入常用头像' }, '+');
-  addCell.onclick = () => uploadImage(dataUrl => {
-    _addUserPreset(dataUrl, b.author || '我的头像');
-    b.avatar = dataUrl;  // 同时也设到当前 build，省得再点一次
+  addCell.onclick = () => uploadImage(async dataUrl => {
+    b.avatar = await addImage(dataUrl);  // 当前 build 直接用 imgId
+    _addUserPreset(dataUrl, b.author || '我的头像');  // 预设存 dataUrl，可重复入列自动去重
     saveBuilds(state.builds);
     render();
   });
@@ -1631,11 +1637,11 @@ function renderEditor(app) {
   coverRow.appendChild(el('label', {}, '封面图'));
   const coverEl = el('div', { class: 'cover-uploader' });
   if (b.cover) {
-    coverEl.appendChild(el('img', { src: b.cover }));
+    coverEl.appendChild(el('img', { src: imgSrc(b.cover) }));
   } else {
     coverEl.appendChild(document.createTextNode('点击上传封面'));
   }
-  coverEl.onclick = () => uploadImage(dataUrl => { b.cover = dataUrl; render(); });
+  coverEl.onclick = () => uploadImage(async dataUrl => { b.cover = await addImage(dataUrl); saveBuilds(state.builds); render(); });
   coverRow.appendChild(coverEl);
   if (b.cover) {
     coverRow.appendChild(el('button', { class: 'btn btn-sm btn-ghost', onclick: () => { b.cover = ''; render(); } }, '移除封面'));
@@ -1718,7 +1724,7 @@ function renderSectionEditor(b, sec, sIdx) {
   const pvWrap = el('div', { class: 'section-previews' });
   secPreviews(sec).forEach((url, i) => {
     const pv = el('div', { class: 'section-preview', title: '点击替换这张预览图' });
-    pv.appendChild(el('img', { src: url }));
+    pv.appendChild(el('img', { src: imgSrc(url) }));
     pv.appendChild(el('div', {
       class: 'preview-del', title: '删除这张',
       onclick: e => {
@@ -1727,17 +1733,17 @@ function renderSectionEditor(b, sec, sIdx) {
         setSecPreviews(sec, ps); render();
       }
     }, '×'));
-    pv.onclick = () => uploadImage(dataUrl => {
-      const ps = secPreviews(sec); ps[i] = dataUrl;
-      setSecPreviews(sec, ps); render();
+    pv.onclick = () => uploadImage(async dataUrl => {
+      const ps = secPreviews(sec); ps[i] = await addImage(dataUrl);
+      setSecPreviews(sec, ps); saveBuilds(state.builds); render();
     });
     pvWrap.appendChild(pv);
   });
   pvWrap.appendChild(el('div', {
     class: 'section-preview add', title: '添加预览图（可多张）',
-    onclick: () => uploadImage(dataUrl => {
-      const ps = secPreviews(sec); ps.push(dataUrl);
-      setSecPreviews(sec, ps); render();
+    onclick: () => uploadImage(async dataUrl => {
+      const ps = secPreviews(sec); ps.push(await addImage(dataUrl));
+      setSecPreviews(sec, ps); saveBuilds(state.builds); render();
     })
   }, '＋'));
   header.appendChild(pvWrap);
@@ -1860,11 +1866,12 @@ function renderFreePageEditor(b, sec, sIdx) {
   if (!sec.freePage) {
     stage.appendChild(el('div', {}, '📷 点击上传图片\n（支持自由拖动、缩放、打标记）'));
     stage.onclick = () => {
-      uploadImage(dataUrl => {
+      uploadImage(async dataUrl => {
         const img = new Image();
-        img.onload = () => {
+        img.onload = async () => {
+          const _fpImgId = await addImage(dataUrl);
           sec.freePage = {
-            image: dataUrl,
+            imageRef: _fpImgId,
             imgW: img.naturalWidth,
             imgH: img.naturalHeight,
             // Default: image occupies 80% of stage, centered
@@ -1883,7 +1890,7 @@ function renderFreePageEditor(b, sec, sIdx) {
     imgEl.style.top = fp.y + '%';
     imgEl.style.width = fp.w + '%';
     imgEl.style.height = fp.h + '%';
-    imgEl.appendChild(el('img', { src: fp.image, alt: '自由页面' }));
+    imgEl.appendChild(el('img', { src: imgSrc(fp.imageRef || fp.image), alt: '自由页面' }));
     // Markers (drawn relative to stage)
     (sec.markers || []).forEach((mk, mkIdx) => {
       const marker = el('div', { class: 'free-marker' }, String(mkIdx + 1));
@@ -1933,7 +1940,7 @@ function renderFreePageEditor(b, sec, sIdx) {
     imgEl.style.top = pY(imgTopPx);
     imgEl.style.width = pX(imgWidthPx);
     imgEl.style.height = pY(imgHeightPx);
-    imgEl.appendChild(el('img', { src: fp.image, alt: '自由页面' }));
+    imgEl.appendChild(el('img', { src: imgSrc(fp.imageRef || fp.image), alt: '自由页面' }));
     // Resize handle
     const handle = el('div', { class: 'free-resize-handle br' });
     imgEl.appendChild(handle);
@@ -2060,10 +2067,11 @@ function renderFreePageEditor(b, sec, sIdx) {
     controls.appendChild(el('button', {
       class: 'btn btn-sm btn-secondary',
       onclick: () => {
-        uploadImage(dataUrl => {
+        uploadImage(async dataUrl => {
           const img = new Image();
-          img.onload = () => {
-            sec.freePage = { image: dataUrl, imgW: img.naturalWidth, imgH: img.naturalHeight, x: 10, y: 10, w: 80, h: 80 * (img.naturalHeight / img.naturalWidth) };
+          img.onload = async () => {
+            const _fpImgId = await addImage(dataUrl);
+            sec.freePage = { imageRef: _fpImgId, imgW: img.naturalWidth, imgH: img.naturalHeight, x: 10, y: 10, w: 80, h: 80 * (img.naturalHeight / img.naturalWidth) };
             sec.markers = [];
             render();
           };
@@ -2287,7 +2295,7 @@ function renderViewer(app) {
   // 顶部 banner
   const banner = el('div', { class: 'viewer-banner' });
   const cover = el('div', { class: 'cover' });
-  if (b.cover) cover.appendChild(el('img', { src: b.cover }));
+  if (b.cover) cover.appendChild(el('img', { src: imgSrc(b.cover) }));
   else cover.textContent = '🏠';
   banner.appendChild(cover);
   banner.appendChild(el('div', { class: 'title-block' },
@@ -2310,7 +2318,7 @@ function renderViewer(app) {
         const pvWrap = el('div', { class: 'viewer-section-previews' });
         pvs.forEach(u => {
           const prev = el('div', { class: 'viewer-section-preview' });
-          prev.appendChild(el('img', { src: u }));
+          prev.appendChild(el('img', { src: imgSrc(u) }));
           pvWrap.appendChild(prev);
         });
         sh.appendChild(pvWrap);
@@ -2413,7 +2421,7 @@ function renderFreePageViewer(sec) {
     imgEl.style.top = pY(imgTopPx);
     imgEl.style.width = pX(imgWidthPx);
     imgEl.style.height = pY(imgHeightPx);
-    imgEl.appendChild(el('img', { src: fp.image, alt: '自由页面' }));
+    imgEl.appendChild(el('img', { src: imgSrc(fp.imageRef || fp.image), alt: '自由页面' }));
     stage.appendChild(imgEl);
     (sec.markers || []).forEach((mk, mkIdx) => {
       const m = el('div', { class: 'viewer-free-marker' }, String(mkIdx + 1));
@@ -2525,19 +2533,20 @@ async function exportImages(build) {
       }
     });
   });
-  if (build.cover) tasks.push(loadImg(build.cover).then(img => { imgCache[build.cover] = img; }));
-  if (build.avatar) tasks.push(loadImg(build.avatar).then(img => { imgCache[build.avatar] = img; }));
+  const _coverUrl = imgResolved(build.cover); if (_coverUrl) tasks.push(loadImg(_coverUrl).then(img => { imgCache[_coverUrl] = img; }));
+  const _avatarUrl = imgResolved(build.avatar); if (_avatarUrl) tasks.push(loadImg(_avatarUrl).then(img => { imgCache[_avatarUrl] = img; }));
   (build.sections || []).forEach(sec => {
     secPreviews(sec).forEach(pv => {
-      if (!seen.has(pv)) {
-        seen.add(pv);
-        tasks.push(loadImg(pv).then(img => { imgCache[pv] = img; }));
+      const _pv = imgResolved(pv);
+      if (_pv && !seen.has(_pv)) {
+        seen.add(_pv);
+        tasks.push(loadImg(_pv).then(img => { imgCache[_pv] = img; }));
       }
     });
     // 预加载自由页面图片
-    if (sec.freePage && sec.freePage.image) {
-      const fpImg = sec.freePage.image;
-      tasks.push(loadImg(fpImg).then(img => { imgCache[fpImg] = img; }));
+    if (sec.freePage && (sec.freePage.imageRef || sec.freePage.image)) {
+      const fpImg = imgResolved(sec.freePage.imageRef || sec.freePage.image);
+      if (fpImg) tasks.push(loadImg(fpImg).then(img => { imgCache[fpImg] = img; }));
     }
   });
   // 预加载背景附件
@@ -2634,7 +2643,10 @@ async function exportImages(build) {
   // 计算分区头布局：badge 在顶部左对齐，预览图在文案下方满宽横向排列
   // 无预览图时高度 = SEC_BADGE_H；有预览图时高度 = SEC_BADGE_H + 间距 + pvH
   function calcSecHeaderLayout(sec) {
-    const previews = secPreviews(sec).filter(pv => imgCache[pv]);
+    const previews = secPreviews(sec).map(pv => {
+      const key = imgResolved(pv) || pv;  // imgId → 解到 dataUrl；dataUrl 原样；raw URL 原样
+      return key && imgCache[key] ? { key } : null;
+    }).filter(Boolean);
     const badgeText = '[ ' + (sec.title || '未命名') + ' ]';
     ctx.font = `bold ${SEC_TITLE_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
     const badgeW = Math.round(ctx.measureText(badgeText).width) + 64;
@@ -2671,7 +2683,7 @@ async function exportImages(build) {
         ctx.save();
         drawRoundedRect(ctx, px, py, lay.cellW, lay.pvH, 8);
         ctx.clip();
-        drawImageContain(ctx, imgCache[pv], px, py, lay.cellW, lay.pvH);
+        drawImageContain(ctx, imgCache[pv.key], px, py, lay.cellW, lay.pvH);
         ctx.restore();
         px += lay.cellW + lay.gap;
       });
@@ -2973,7 +2985,8 @@ async function exportImages(build) {
     // 传 10：头底部与图片间距 10px（drawSectionHeader 只推进头高+10）
     drawSectionHeader(sec, 10);
     // Draw image（此时 y 已在头底部 + 10）
-    const img = imgCache[fp.image];
+    const _fpExportUrl = imgResolved(fp.imageRef || fp.image);
+    const img = _fpExportUrl && imgCache[_fpExportUrl];
     if (img) {
       drawImageContain(ctx, img, imgX, y, imgW, imgH);
     } else {
@@ -3157,7 +3170,8 @@ async function exportImages(build) {
       cctx.beginPath();
       cctx.arc(oCx, oCy, ar, 0, Math.PI * 2);
       cctx.clip();
-      cctx.drawImage(imgCache[build.avatar], ax, ay, AV, AV);
+      const _avUrl = imgResolved(build.avatar);
+      if (_avUrl && imgCache[_avUrl]) cctx.drawImage(imgCache[_avUrl], ax, ay, AV, AV);
       cctx.restore();
     }
 
@@ -3201,7 +3215,28 @@ async function exportImages(build) {
 }
 
 // ===== Init =====
-render();
+render();  // 首次渲染：让 UI 立刻可见；bootImgbed 完成后会再次渲染以加载图
+
+(async function bootImgbed() {
+  // 1. 把 IndexedDB 现有图加载到内存缓存
+  await imgCacheWarmup();
+  // 2. 把旧 builds 里的 base64 迁到 imgId（只跑一次，迁移完成后再次进入会看到 migrated=0 直接退出）
+  try {
+    const stored = loadStored();
+    if (stored && stored.builds) {
+      const r = await migrateOldBuilds(stored.builds);
+      if (r.migrated > 0) {
+        // 落盘新结构（refs 替代 base64，体积立刻降一个数量级）
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ builds: stored.builds, updatedAt: stored.updatedAt || Date.now() }));
+        // 关键：state.builds 也要同步新结构，否则下次 save 会把旧 dataUrl 重新写回 localStorage
+        state.builds = stored.builds;
+        console.log('[imgbed] 已迁移', r.migrated, '张图到 IndexedDB');
+      }
+    }
+  } catch (e) { console.warn('[imgbed] 旧数据迁移失败：', e); }
+  // 3. 重渲染（确保所有 <img src=imgSrc(...)> 现在拿到的是内存缓存里的 dataUrl）
+  if (state.route) render();
+})();
 
 // ===== 云端实时同步初始化（GitHub Gist，在 https 在线网址下生效；token 仅存本机）=====
 initSync();
