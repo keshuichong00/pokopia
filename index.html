@@ -835,7 +835,7 @@
   </div>
   <div class="crumb" id="crumb"></div>
   <div class="spacer"></div>
-  <div class="sync-chip" id="syncChip" title="云端同步：点击启用（GitHub Gist）/ 已启用则手动拉取">⚪ 仅本地</div>
+  <div class="sync-chip" id="syncChip" title="云端同步（GitHub Gist）：平时完全离线，点此手动同步 / 未启用则点此配置令牌">⚪ 仅本地</div>
   <div class="actions" id="topActions"></div>
 </div>
 
@@ -933,15 +933,19 @@ function loadBuilds() {
   catch { return {}; }
 }
 function saveBuilds(builds) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ builds, updatedAt: Date.now() }));
-  pushBuildsToGist(builds);
+  const ts = Date.now();
+  for (const id in builds) { if (builds[id] && typeof builds[id] === 'object') builds[id].mtime = ts; }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ builds, updatedAt: ts }));
+  // 默认不联网：仅在用户主动点击「同步」时才推送到云端（离线隐私，避免公司网络留下访问痕迹）
 }
 
-// ===== 云端实时同步（GitHub Gist，复用你的 GitHub 账号，无需注册新服务）=====
-// 在 https 在线网址下生效；token 仅存本机 localStorage，不写入仓库。file:// 本地双击建议直接用在线网址
+// ===== 云端同步（GitHub Gist，手动触发，平时完全离线）=====
+// 设计目标：在公司编辑时「零网络请求」——打开网页、每次保存都不连外网，公司无从得知你打开了链接/操作时长是多久。
+// 只有回到家用手机热点 / 回家后，主动点「同步」才会连一次 api.github.com 完成双向合并。
+// 在 https 在线网址与 file:// 本地双击下均生效（裸 fetch + PAT，不依赖匿名登录）；token 仅存本机 localStorage，不写入仓库。多端用同一 token 读写同一私有 Gist 即互通。
 const GH_API = 'https://api.github.com';
 const GIST_KEY = 'pokopia_gist_sync';
-let _gsync = { enabled: false, token: null, gistId: null, applying: false, lastPushTs: 0, timer: null };
+let _gsync = { enabled: false, token: null, gistId: null, applying: false, busy: false, lastPushTs: 0, timer: null };
 function gistCfgLoad() { try { return JSON.parse(localStorage.getItem(GIST_KEY) || '{}'); } catch { return {}; } }
 function gistCfgSave(c) { localStorage.setItem(GIST_KEY, JSON.stringify(c)); }
 function setSyncStatus(kind) {
@@ -950,7 +954,8 @@ function setSyncStatus(kind) {
   const map = {
     local:  ['⚪', '仅本地'],
     setup:  ['🟡', '点此启用同步'],
-    online: ['🟢', '云端同步中'],
+    ready:  ['🟣', '已配置·待同步'],
+    online: ['🟢', '同步中…'],
     synced: ['🔵', '已同步'],
     error:  ['🔴', '同步失败'],
   };
@@ -968,34 +973,53 @@ async function gistApi(method, path, body, token) {
   if (!r.ok) throw new Error(method + ' ' + path + ' -> ' + r.status);
   return r.status === 204 ? null : r.json();
 }
-function pushBuildsToGist(builds) {
-  if (!_gsync.enabled || _gsync.applying) return;
-  const ts = Date.now(); _gsync.lastPushTs = ts;
+async function gistPush(builds, ts) {
+  ts = ts || Date.now();
   const payload = { files: { 'pokopia_builds.json': { content: JSON.stringify({ builds, updatedAt: ts }) } } };
-  gistApi('PATCH', '/gists/' + _gsync.gistId, payload, _gsync.token)
-    .then(() => setSyncStatus('synced'))
-    .catch(e => { console.warn('[gist] 推送失败', e); setSyncStatus('error'); });
+  await gistApi('PATCH', '/gists/' + _gsync.gistId, payload, _gsync.token);
 }
-async function gistPull() {
-  if (!_gsync.enabled || _gsync.applying) return;
+// 手动同步：拉取云端 → 与本地按「每个方案最后修改时间」合并 → 推回云端全集。
+// 全程只在用户主动点击时触发一次联网，平时编辑零网络请求。
+async function manualSync() {
+  if (!_gsync.enabled) { openSyncSetup(); return; }
+  if (_gsync.busy) return;
+  _gsync.busy = true;
   try {
+    setSyncStatus('online');
     const g = await gistApi('GET', '/gists/' + _gsync.gistId, null, _gsync.token);
     const raw = g && g.files && g.files['pokopia_builds.json'] && g.files['pokopia_builds.json'].content;
-    if (!raw) return;
-    const remote = JSON.parse(raw); const remoteBuilds = remote.builds || {};
+    const remote = raw ? JSON.parse(raw) : { builds: {}, updatedAt: 0 };
+    const remoteBuilds = remote.builds || {};
     const local = loadStored(); const localBuilds = local.builds || {};
-    if (JSON.stringify(remoteBuilds) === JSON.stringify(localBuilds)) return;
-    if ((remote.updatedAt || 0) <= (local.updatedAt || 0)) return;
-    _gsync.applying = true;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ builds: remoteBuilds, updatedAt: remote.updatedAt || Date.now() }));
-    state.builds = remoteBuilds; _gsync.applying = false;
+    const merged = Object.assign({}, remoteBuilds);
+    const allKeys = new Set([...Object.keys(remoteBuilds), ...Object.keys(localBuilds)]);
+    let conflict = 0;
+    for (const k of allKeys) {
+      const r = remoteBuilds[k], l = localBuilds[k];
+      if (!r) merged[k] = l;
+      else if (!l) merged[k] = r;
+      else {
+        const rt = (r && r.mtime) || 0, lt = (l && l.mtime) || 0;
+        if (rt !== lt) conflict++;
+        merged[k] = (rt >= lt) ? r : l; // 同一方案两端都改过：保留更晚修改的
+      }
+    }
+    const now = Date.now();
+    for (const id in merged) { if (merged[id] && typeof merged[id] === 'object') merged[id].mtime = merged[id].mtime || now; }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ builds: merged, updatedAt: now }));
+    state.builds = merged;
     if (state.route) render();
-    setSyncStatus('synced'); toast('已从云端同步 ✓');
-  } catch (e) { console.warn('[gist] 拉取失败', e); setSyncStatus('error'); }
+    await gistPush(merged, now);
+    _gsync.lastPushTs = now;
+    setSyncStatus('synced');
+    toast('已同步 ✓ 共 ' + Object.keys(merged).length + ' 个方案' + (conflict ? '（合并 ' + conflict + ' 个两端修改）' : ''));
+  } catch (e) {
+    console.warn('[gist] 同步失败', e); setSyncStatus('error'); toast('同步失败：' + e.message);
+  } finally { _gsync.busy = false; }
 }
 async function enableGistSync(token, gistId) {
   try {
-    await gistApi('GET', '/user', null, token); // 校验 token
+    await gistApi('GET', '/user', null, token); // 校验 token（仅在用户主动启用时联网一次）
     _gsync.token = token;
     if (!gistId) {
       const created = await gistApi('POST', '/gists', { files: { 'pokopia_builds.json': { content: '{}' } }, description: 'Pokopia 材料单同步', public: false }, token);
@@ -1004,15 +1028,7 @@ async function enableGistSync(token, gistId) {
     _gsync.gistId = gistId; _gsync.enabled = true;
     gistCfgSave({ token, gistId });
     setSyncStatus('online');
-    const g = await gistApi('GET', '/gists/' + gistId, null, token);
-    const raw = g.files && g.files['pokopia_builds.json'] && g.files['pokopia_builds.json'].content;
-    const remote = raw ? JSON.parse(raw) : { builds: {} };
-    if ((!remote.builds || Object.keys(remote.builds).length === 0) && Object.keys(loadStored().builds || {}).length) {
-      pushBuildsToGist(loadStored().builds);
-    } else { gistPull(); }
-    if (_gsync.timer) clearInterval(_gsync.timer);
-    _gsync.timer = setInterval(gistPull, 8000);
-    toast('同步已启用 ✓');
+    await manualSync(); // 合并本地与云端并推送全集（启用即完成一次对齐）
   } catch (e) { console.warn('[gist] 启用失败', e); setSyncStatus('error'); toast('同步启用失败：' + e.message); }
 }
 function openSyncSetup() {
@@ -1020,7 +1036,7 @@ function openSyncSetup() {
   const overlay = el('div', { class: 'dye-picker-overlay' });
   const box = el('div', { class: 'dye-picker' });
   box.appendChild(el('h3', {}, '🔗 启用云端同步（GitHub Gist）'));
-  box.appendChild(el('div', { class: 'hint' }, '复用你的 GitHub 账号，自动建私有 Gist 当同步仓库。令牌仅存本机，不进代码仓库。'));
+  box.appendChild(el('div', { class: 'hint' }, '复用你的 GitHub 账号，自动建私有 Gist 当同步仓库。令牌仅存本机，不进代码仓库。启用后「平时完全离线」：打开/编辑都不联网，只有你主动点同步才会连一次 GitHub——适合在公司摸鱼、回家用热点再同步。'));
   const ta = el('textarea', { placeholder: '粘贴 GitHub 私人令牌 (PAT)，需 gist 权限', rows: 3 }); ta.value = cfg.token || '';
   box.appendChild(ta);
   const idInput = el('input', { placeholder: 'Gist ID（留空=自动新建私有 Gist）' }); idInput.value = cfg.gistId || '';
@@ -1042,8 +1058,11 @@ function openSyncSetup() {
 }
 function initSync() {
   const cfg = gistCfgLoad();
-  if (cfg.token && cfg.gistId) { enableGistSync(cfg.token, cfg.gistId); }
-  else { setSyncStatus('setup'); }
+  if (cfg.token && cfg.gistId) {
+    // 仅本地恢复配置，不联网（离线隐私：打开网页本身不向外发任何请求）
+    _gsync.token = cfg.token; _gsync.gistId = cfg.gistId; _gsync.enabled = true;
+    setSyncStatus('ready');
+  } else { setSyncStatus('setup'); }
 }
 function genId() { return 'b_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6); }
 
@@ -2904,7 +2923,7 @@ render();
 // ===== 云端实时同步初始化（GitHub Gist，在 https 在线网址下生效；token 仅存本机）=====
 initSync();
 const _syncChip = document.getElementById('syncChip');
-if (_syncChip) _syncChip.onclick = () => { if (_gsync.enabled) { gistPull(); } else { openSyncSetup(); } };
+if (_syncChip) _syncChip.onclick = () => { if (_gsync.enabled) { manualSync(); } else { openSyncSetup(); } };
 
 // ===== PWA service worker 注册（http(s) 守卫，保护本地 file:// 双击） =====
 if ((location.protocol === 'http:' || location.protocol === 'https:') && 'serviceWorker' in navigator) {
