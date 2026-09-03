@@ -973,6 +973,19 @@ async function gistApi(method, path, body, token) {
   if (!r.ok) throw new Error(method + ' ' + path + ' -> ' + r.status);
   return r.status === 204 ? null : r.json();
 }
+// 拉取单文件完整内容：GitHub API 对 >~1MB 的 content 会截断并标 truncated=true，
+// 此时必须改走 raw_url（CDN 完整版）才能 JSON.parse。
+async function gistFetchRawContent(token, gistId, filename) {
+  const g = await gistApi('GET', '/gists/' + gistId, null, token);
+  const f = g && g.files && g.files[filename];
+  if (!f) return null;
+  if (f.truncated && f.raw_url) {
+    const r = await fetch(f.raw_url);
+    if (!r.ok) throw new Error('raw_url HTTP ' + r.status);
+    return await r.text();
+  }
+  return f.content || '';
+}
 async function gistPush(builds, ts) {
   ts = ts || Date.now();
   const payload = { files: { 'pokopia_builds.json': { content: JSON.stringify({ builds, updatedAt: ts }) } } };
@@ -986,8 +999,7 @@ async function manualSync() {
   _gsync.busy = true;
   try {
     setSyncStatus('online');
-    const g = await gistApi('GET', '/gists/' + _gsync.gistId, null, _gsync.token);
-    const raw = g && g.files && g.files['pokopia_builds.json'] && g.files['pokopia_builds.json'].content;
+    const raw = await gistFetchRawContent(_gsync.token, _gsync.gistId, 'pokopia_builds.json');
     const remote = raw ? JSON.parse(raw) : { builds: {}, updatedAt: 0 };
     const remoteBuilds = remote.builds || {};
     const local = loadStored(); const localBuilds = local.builds || {};
