@@ -49,6 +49,14 @@ for var, cache in [("__INLINE_BG1__", "bg1.b64"), ("__INLINE_BG2__", "bg2.b64"),
         ext = "jpeg" if cache.startswith("bg") else "png"
         result = result.replace(f"/*#{var}*/''", f'"data:image/{ext};base64,{b64}"')
 
+# 4b. 常用头像预设（数组字面量，与 build.py 一致）
+avatar_preset_cache = base / "cat-sleep-girl.b64"
+if avatar_preset_cache.exists():
+    avatar_b64 = avatar_preset_cache.read_text(encoding="utf-8").strip()
+    avatar_data_url = '"data:image/jpeg;base64,' + avatar_b64 + '"'
+    avatar_preset_literal = '[{id:"cat-sleep-girl",name:"瞌睡虫小猫",dataUrl:' + avatar_data_url + '}]'
+    result = result.replace("/*#__INLINE_AVATAR_PRESETS__*/[]", avatar_preset_literal)
+
 # 5. 写出
 out = base / "index-offline.html"
 out.write_text(result, encoding="utf-8")

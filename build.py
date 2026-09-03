@@ -20,6 +20,14 @@ result = result.replace("/*#__INLINE_BG2__*/''", '"data:image/jpeg;base64,' + bg
 logo_b64 = (base / "logo.b64").read_text().strip()
 result = result.replace("/*#__INLINE_LOGO__*/''", '"data:image/png;base64,' + logo_b64 + '"')
 
+# 注入常用头像预设（[{id,name,dataUrl}, ...] 数组字面量）
+avatar_preset_path = base / "cat-sleep-girl.b64"
+if avatar_preset_path.exists():
+    avatar_b64 = avatar_preset_path.read_text().strip()
+    avatar_data_url = '"data:image/jpeg;base64,' + avatar_b64 + '"'
+    avatar_preset_literal = '[{id:"cat-sleep-girl",name:"瞌睡虫小猫",dataUrl:' + avatar_data_url + '}]'
+    result = result.replace("/*#__INLINE_AVATAR_PRESETS__*/[]", avatar_preset_literal)
+
 out = base / "index.html"
 out.write_text(result, encoding="utf-8")
 print(f"✓ 生成: {out}")

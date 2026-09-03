@@ -309,6 +309,35 @@
   .avatar-uploader img { width: 100%; height: 100%; object-fit: cover; }
   .avatar-uploader:hover { background: var(--primary); color: white; }
 
+  /* 常用头像预设 */
+  .avatar-presets-row {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  }
+  .avatar-preset {
+    width: 48px; height: 48px; border-radius: 50%;
+    border: 2px solid transparent; cursor: pointer; overflow: hidden;
+    background: var(--primary-light); position: relative;
+    transition: transform 0.15s, border-color 0.15s;
+  }
+  .avatar-preset img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .avatar-preset:hover { transform: scale(1.08); border-color: var(--primary); }
+  .avatar-preset.selected { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-light); }
+  .avatar-preset .preset-remove {
+    position: absolute; top: -6px; right: -6px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: rgba(220, 50, 50, 0.9); color: white;
+    font-size: 12px; line-height: 18px; text-align: center;
+    cursor: pointer; display: none;
+  }
+  .avatar-preset.is-user:hover .preset-remove { display: block; }
+  .avatar-preset-add {
+    display: flex; align-items: center; justify-content: center;
+    border: 2px dashed var(--border); color: var(--primary-dark);
+    background: transparent; font-size: 20px;
+  }
+  .avatar-preset-add:hover { border-color: var(--primary); background: var(--primary-light); }
+  .avatar-presets-hint { font-size: 11px; color: var(--text-muted); margin-left: 4px; }
+
   .section-card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -928,10 +957,138 @@ ITEMS.forEach(it => {
 
 // ===== Storage =====
 const STORAGE_KEY = 'pokopia_builds_v1';
+const USER_AVATAR_KEY = 'pokopia_user_avatar_presets_v1';
 function loadBuilds() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}').builds || {}; }
   catch { return {}; }
 }
+// ===== 图床：本地 IndexedDB 存图片 + 内存缓存 + 跨设备通过 Gist 同步 =====
+// 数据模型：builds 里只存 "img_xxxxxxxxxxxxxxxx" 引用 id；真实 dataUrl 存在这里。
+// 同一张图（SHA-1 前 16 位）去重：避免重复存储。
+// 内存缓存同步填，让渲染 <img src=...> 不阻塞。
+const IMG_DB = 'pokopia_imgbed';
+const IMG_STORE = 'images';
+let _imgDb = null;
+let _imgCache = Object.create(null);  // imgId -> dataUrl（同步）
+let _imgReady = false;
+function openImgDb() {
+  if (_imgDb) return Promise.resolve(_imgDb);
+  return new Promise((res, rej) => {
+    const r = indexedDB.open(IMG_DB, 1);
+    r.onupgradeneeded = () => {
+      const db = r.result;
+      if (!db.objectStoreNames.contains(IMG_STORE)) db.createObjectStore(IMG_STORE, { keyPath: 'id' });
+    };
+    r.onsuccess = () => { _imgDb = r.result; res(_imgDb); };
+    r.onerror = () => rej(r.error);
+  });
+}
+async function imgPut(id, rec) {
+  const db = await openImgDb();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(IMG_STORE, 'readwrite');
+    tx.objectStore(IMG_STORE).put({ id, ...rec });
+    tx.oncomplete = () => res();
+    tx.onerror = () => rej(tx.error);
+  });
+}
+async function imgGet(id) {
+  if (_imgCache[id] !== undefined) return _imgCache[id];
+  const db = await openImgDb();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(IMG_STORE, 'readonly');
+    const r = tx.objectStore(IMG_STORE).get(id);
+    r.onsuccess = () => {
+      const v = r.result && r.result.dataUrl;
+      if (v) _imgCache[id] = v;
+      res(v || null);
+    };
+    r.onerror = () => rej(r.error);
+  });
+}
+async function imgAll() {
+  const db = await openImgDb();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(IMG_STORE, 'readonly');
+    const r = tx.objectStore(IMG_STORE).getAll();
+    r.onsuccess = () => res(r.result || []);
+    r.onerror = () => rej(r.error);
+  });
+}
+async function imgDel(id) {
+  delete _imgCache[id];
+  const db = await openImgDb();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(IMG_STORE, 'readwrite');
+    tx.objectStore(IMG_STORE).delete(id);
+    tx.oncomplete = () => res();
+    tx.onerror = () => rej(tx.error);
+  });
+}
+// SHA-1：图片内容寻址，同 dataUrl 始终得同一 id
+async function _sha1Hex(str) {
+  const buf = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+// 注册图：内存+IndexedDB 双写，返回 imgId（同步缓存，异步持久化 fire-and-forget）
+async function addImage(dataUrl) {
+  const hash = await _sha1Hex(dataUrl);
+  const id = 'img_' + hash.slice(0, 16);
+  _imgCache[id] = dataUrl;  // 同步，渲染立即可用
+  if (_imgReady) imgPut(id, { dataUrl, ts: Date.now() }).catch(e => console.warn('[imgbed] put fail', e));
+  return id;
+}
+// 同步解析：ref → dataUrl；dataUrl 自身 → 原样；URL → 原样；找不到 → ''（让 <img> onerror 显示占位）
+function imgSrc(token) {
+  if (!token) return '';
+  if (token.startsWith('data:') || token.startsWith('http')) return token;
+  if (token.startsWith('img_')) return _imgCache[token] || '';
+  return token;
+}
+// 把 builds 里所有 base64 迁到 IndexedDB，字段值替换为 imgId。返回迁移计数。
+async function migrateOldBuilds(builds) {
+  if (!builds || typeof builds !== 'object') return { migrated: 0 };
+  let migrated = 0;
+  for (const bid in builds) {
+    const b = builds[bid];
+    if (!b) continue;
+    // 顶层 cover / avatar
+    for (const k of ['cover', 'avatar']) {
+      if (b[k] && typeof b[k] === 'string' && b[k].startsWith('data:')) {
+        b[k] = await addImage(b[k]); migrated++;
+      }
+    }
+    for (const sec of (b.sections || [])) {
+      // previews: 旧 [dataUrl,...] → 新 [imgId,...]
+      if (Array.isArray(sec.previews)) {
+        const np = [];
+        for (const pv of sec.previews) {
+          if (typeof pv === 'string' && pv.startsWith('data:')) { np.push(await addImage(pv)); migrated++; }
+          else if (pv) np.push(pv);
+        }
+        sec.previews = np;
+      }
+      // freePage.image → freePage.imageRef
+      if (sec.freePage) {
+        if (sec.freePage.image && typeof sec.freePage.image === 'string' && sec.freePage.image.startsWith('data:')) {
+          const id = await addImage(sec.freePage.image); migrated++;
+          sec.freePage.imageRef = id;
+          delete sec.freePage.image;
+        }
+      }
+    }
+  }
+  return { migrated };
+}
+// 启动时把 IndexedDB 现有图加载到 _imgCache（避免冷启动后渲染要异步等）
+async function imgCacheWarmup() {
+  try {
+    const all = await imgAll();
+    all.forEach(r => { if (r && r.id && r.dataUrl) _imgCache[r.id] = r.dataUrl; });
+    _imgReady = true;
+  } catch (e) { console.warn('[imgbed] warmup fail', e); _imgReady = true; }
+}
+
 function saveBuilds(builds) {
   const ts = Date.now();
   for (const id in builds) { if (builds[id] && typeof builds[id] === 'object') builds[id].mtime = ts; }
@@ -945,6 +1102,8 @@ function saveBuilds(builds) {
 // 在 https 在线网址与 file:// 本地双击下均生效（裸 fetch + PAT，不依赖匿名登录）；token 仅存本机 localStorage，不写入仓库。多端用同一 token 读写同一私有 Gist 即互通。
 const GH_API = 'https://api.github.com';
 const GIST_KEY = 'pokopia_gist_sync';
+// 常用头像预设（构建脚本注入）。运行时叠加 localStorage 用户自加项。
+const AVATAR_PRESETS = /*#__INLINE_AVATAR_PRESETS__*/[];
 let _gsync = { enabled: false, token: null, gistId: null, applying: false, busy: false, lastPushTs: 0, timer: null };
 function gistCfgLoad() { try { return JSON.parse(localStorage.getItem(GIST_KEY) || '{}'); } catch { return {}; } }
 function gistCfgSave(c) { localStorage.setItem(GIST_KEY, JSON.stringify(c)); }
@@ -988,7 +1147,15 @@ async function gistFetchRawContent(token, gistId, filename) {
 }
 async function gistPush(builds, ts) {
   ts = ts || Date.now();
-  const payload = { files: { 'pokopia_builds.json': { content: JSON.stringify({ builds, updatedAt: ts }) } } };
+  // 同时推 builds + images 两个文件。images 从本地 IndexedDB 全量取（保证云端完整）
+  const imgs = {};
+  (await imgAll()).forEach(r => { if (r && r.id) imgs[r.id] = { dataUrl: r.dataUrl, ts: r.ts || ts }; });
+  const payload = {
+    files: {
+      'pokopia_builds.json': { content: JSON.stringify({ builds, updatedAt: ts }) },
+      'pokopia_images.json': { content: JSON.stringify({ images: imgs, updatedAt: ts }) },
+    }
+  };
   await gistApi('PATCH', '/gists/' + _gsync.gistId, payload, _gsync.token);
 }
 // 手动同步：拉取云端 → 与本地按「每个方案最后修改时间」合并 → 推回云端全集。
@@ -999,9 +1166,17 @@ async function manualSync() {
   _gsync.busy = true;
   try {
     setSyncStatus('online');
-    const raw = await gistFetchRawContent(_gsync.token, _gsync.gistId, 'pokopia_builds.json');
-    const remote = raw ? JSON.parse(raw) : { builds: {}, updatedAt: 0 };
-    const remoteBuilds = remote.builds || {};
+    // 1. 拉 builds
+    const rawB = await gistFetchRawContent(_gsync.token, _gsync.gistId, 'pokopia_builds.json');
+    const remoteB = rawB ? JSON.parse(rawB) : { builds: {}, updatedAt: 0 };
+    const remoteBuilds = remoteB.builds || {};
+    // 2. 拉 images（可能不存在，老 gist 还没建过）
+    let remoteImages = {};
+    try {
+      const rawI = await gistFetchRawContent(_gsync.token, _gsync.gistId, 'pokopia_images.json');
+      if (rawI) { const ri = JSON.parse(rawI); remoteImages = (ri && ri.images) || {}; }
+    } catch (e) { console.warn('[gist] images.json 拉取失败（可能尚未创建）', e); }
+    // 3. 合并 builds（按 mtime 较新）
     const local = loadStored(); const localBuilds = local.builds || {};
     const merged = Object.assign({}, remoteBuilds);
     const allKeys = new Set([...Object.keys(remoteBuilds), ...Object.keys(localBuilds)]);
@@ -1013,18 +1188,38 @@ async function manualSync() {
       else {
         const rt = (r && r.mtime) || 0, lt = (l && l.mtime) || 0;
         if (rt !== lt) conflict++;
-        merged[k] = (rt >= lt) ? r : l; // 同一方案两端都改过：保留更晚修改的
+        merged[k] = (rt >= lt) ? r : l;
       }
     }
     const now = Date.now();
     for (const id in merged) { if (merged[id] && typeof merged[id] === 'object') merged[id].mtime = merged[id].mtime || now; }
+    // 4. 合并 images + 把云端多出的图存到本地 IndexedDB
+    const localImages = {};
+    (await imgAll()).forEach(r => { if (r && r.id) localImages[r.id] = r; });
+    const mergedImages = Object.assign({}, remoteImages);
+    for (const id of new Set([...Object.keys(remoteImages), ...Object.keys(localImages)])) {
+      const r = remoteImages[id], l = localImages[id];
+      if (!r) mergedImages[id] = l;
+      else if (!l) mergedImages[id] = r;
+      else mergedImages[id] = ((r.ts||0) >= (l.ts||0)) ? r : l;
+    }
+    let newImgCount = 0;
+    for (const id in mergedImages) {
+      if (!localImages[id] && mergedImages[id] && mergedImages[id].dataUrl) {
+        await imgPut(id, { dataUrl: mergedImages[id].dataUrl, ts: mergedImages[id].ts || now });
+        _imgCache[id] = mergedImages[id].dataUrl;
+        newImgCount++;
+      }
+    }
+    // 5. 写本地 + 推云端
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ builds: merged, updatedAt: now }));
     state.builds = merged;
-    if (state.route) render();
     await gistPush(merged, now);
     _gsync.lastPushTs = now;
     setSyncStatus('synced');
-    toast('已同步 ✓ 共 ' + Object.keys(merged).length + ' 个方案' + (conflict ? '（合并 ' + conflict + ' 个两端修改）' : ''));
+    if (state.route) render();
+    const imgCount = Object.keys(mergedImages).length;
+    toast('已同步 ✓ ' + Object.keys(merged).length + ' 方案 + ' + imgCount + ' 张图' + (newImgCount ? '（拉取 ' + newImgCount + ' 张新图）' : '') + (conflict ? '（合并 ' + conflict + ' 个冲突）' : ''));
   } catch (e) {
     console.warn('[gist] 同步失败', e); setSyncStatus('error'); toast('同步失败：' + e.message);
   } finally { _gsync.busy = false; }
@@ -1327,6 +1522,35 @@ function importBuild() {
   input.click();
 }
 
+// ===== 常用头像预设：内置 + 用户自加（localStorage 持久化）=====
+function _userPresetsLoad() { try { return JSON.parse(localStorage.getItem(USER_AVATAR_KEY) || '[]'); } catch { return []; } }
+function _userPresetsSave(arr) { try { localStorage.setItem(USER_AVATAR_KEY, JSON.stringify(arr)); } catch (e) { console.warn('[avatar-presets] 保存失败（容量超限？）', e); toast('常用头像已满：localStorage 空间不足'); } }
+function _allPresets() { return [...AVATAR_PRESETS, ..._userPresetsLoad()]; }
+function _presetMatchUrl(preset, url) {
+  if (!preset || !url) return false;
+  if (preset.dataUrl && url === preset.dataUrl) return true;
+  return false;
+}
+function _addUserPreset(dataUrl, name) {
+  const list = _userPresetsLoad();
+  if (list.some(p => p.dataUrl === dataUrl)) { toast('已在常用列表里'); return; }
+  list.unshift({ id: 'u_' + Date.now().toString(36), name: name || '我的头像', dataUrl });
+  _userPresetsSave(list);
+}
+function _removeUserPreset(presetId) {
+  const list = _userPresetsLoad().filter(p => p.id !== presetId);
+  _userPresetsSave(list);
+}
+// 选择一个预设应用到当前 build（同步显示在上面的头像框）
+async function _pickPreset(dataUrl) {
+  const b = state.draftBuild; if (!b) return;
+  // addImage 先把图存到 IndexedDB 内存缓存（即便后续没有 img_xxx 重构，dataUrl 仍能渲染）
+  try { await addImage(dataUrl); } catch (e) {}
+  b.avatar = dataUrl;  // 直接用 dataUrl（与其他上传分支保持一致）
+  saveBuilds(state.builds);
+  render();
+}
+
 function renderEditor(app) {
   const b = state.draftBuild;
   if (!b) { navigate('home'); return; }
@@ -1356,6 +1580,53 @@ function renderEditor(app) {
     avatarRow.appendChild(el('button', { class: 'btn btn-sm btn-ghost', onclick: () => { b.avatar = ''; render(); } }, '移除头像'));
   }
   infoPanel.appendChild(avatarRow);
+  // 常用头像预设（内置 + 用户自加）
+  const presetsRow = el('div', { class: 'editor-row editor-row-presets' });
+  presetsRow.appendChild(el('label', {}, '常用头像'));
+  const presetWrap = el('div', { class: 'avatar-presets-row' });
+  // 当前头像对应 dataUrl（用于高亮"选中"）
+  const currentAvatarUrl = (() => {
+    if (!b.avatar) return null;
+    if (b.avatar.startsWith('data:') || b.avatar.startsWith('http')) return b.avatar;
+    if (b.avatar.startsWith('img_')) return _imgCache[b.avatar] || null;
+    return null;
+  })();
+  let selectedPresetId = null;
+  for (const p of _allPresets()) {
+    if (p.dataUrl === currentAvatarUrl) selectedPresetId = p.id;
+    const isUser = (p.id || '').startsWith('u_');
+    const cell = el('div', {
+      class: 'avatar-preset' + (p.id === selectedPresetId ? ' selected' : '') + (isUser ? ' is-user' : ''),
+      title: (p.name || '预设头像') + (isUser ? '（悬停可删）' : ''),
+      onclick: (ev) => {
+        if (ev.target.classList.contains('preset-remove')) return;  // 让删除按钮自己处理
+        _pickPreset(p.dataUrl);
+      }
+    });
+    cell.appendChild(el('img', { src: p.dataUrl }));
+    if (isUser) {
+      const rm = el('div', { class: 'preset-remove', title: '从常用中移除' }, '×');
+      rm.onclick = (e) => {
+        e.stopPropagation();
+        _removeUserPreset(p.id);
+        render();
+      };
+      cell.appendChild(rm);
+    }
+    presetWrap.appendChild(cell);
+  }
+  // "+ 上传为常用"按钮：点击后从剪贴板/本地选一张，加入常用
+  const addCell = el('div', { class: 'avatar-preset avatar-preset-add', title: '从本机选择一张图，加入常用头像' }, '+');
+  addCell.onclick = () => uploadImage(dataUrl => {
+    _addUserPreset(dataUrl, b.author || '我的头像');
+    b.avatar = dataUrl;  // 同时也设到当前 build，省得再点一次
+    saveBuilds(state.builds);
+    render();
+  });
+  presetWrap.appendChild(addCell);
+  presetsRow.appendChild(presetWrap);
+  presetsRow.appendChild(el('div', { class: 'avatar-presets-hint' }, '点击选择；悬停自加项可移除'));
+  infoPanel.appendChild(presetsRow);
   const coverRow = el('div', { class: 'editor-row' });
   coverRow.appendChild(el('label', {}, '封面图'));
   const coverEl = el('div', { class: 'cover-uploader' });
