@@ -941,8 +941,9 @@ function saveBuilds(builds) {
   pushBuildsToCloud(builds);
 }
 
-// ===== 云端实时同步（Firebase Realtime DB，可选；配置为空 / SDK 未加载则仅本地）=====
-// 粘贴你的 Firebase 配置即可开启跨设备实时同步（在 https 在线网址下生效；file:// 本地双击无法用匿名登录，自动降级）
+// ===== 云端实时同步（Firebase Realtime DB，公开规则模式；配置为空 / SDK 未加载则仅本地）=====
+// 粘贴配置 + 数据库规则设为公开(.read/.write 全 true)即可跨设备同步，无需开启 Authentication 匿名登录
+// 在 https 在线网址下生效；file:// 本地双击 origin 为 null，建议直接用在线网址访问
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyCwLU9Ukh9WwIgYxKek_4jToJ8CbSXs-wE",
   authDomain: "pokopia-43d0d.firebaseapp.com",
@@ -1005,7 +1006,7 @@ async function initSync() {
       _cfg.databaseURL = 'https://' + _cfg.projectId + '-default-rtdb.firebaseio.com';
     }
     if (!firebase.apps.length) firebase.initializeApp(_cfg);
-    await firebase.auth().signInAnonymously();
+    // 公开规则模式：无需匿名登录，initializeApp 后直接用 database()
     _sync.db = firebase.database();
     _sync.enabled = true;
     const ref = _sync.db.ref('builds');
