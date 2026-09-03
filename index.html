@@ -824,10 +824,6 @@
     .viewer { box-shadow: none; }
   }
 </style>
-<!-- Firebase Realtime DB（云端实时同步，可选；离线/未配置时自动降级为仅本地） -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -839,7 +835,7 @@
   </div>
   <div class="crumb" id="crumb"></div>
   <div class="spacer"></div>
-  <div class="sync-chip" id="syncChip" title="云端同步状态（点击手动拉取）">⚪ 仅本地</div>
+  <div class="sync-chip" id="syncChip" title="云端同步：点击启用（GitHub Gist）/ 已启用则手动拉取">⚪ 仅本地</div>
   <div class="actions" id="topActions"></div>
 </div>
 
@@ -938,29 +934,22 @@ function loadBuilds() {
 }
 function saveBuilds(builds) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ builds, updatedAt: Date.now() }));
-  pushBuildsToCloud(builds);
+  pushBuildsToGist(builds);
 }
 
-// ===== 云端实时同步（Firebase Realtime DB，公开规则模式；配置为空 / SDK 未加载则仅本地）=====
-// 粘贴配置 + 数据库规则设为公开(.read/.write 全 true)即可跨设备同步，无需开启 Authentication 匿名登录
-// 在 https 在线网址下生效；file:// 本地双击 origin 为 null，建议直接用在线网址访问
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCwLU9Ukh9WwIgYxKek_4jToJ8CbSXs-wE",
-  authDomain: "pokopia-43d0d.firebaseapp.com",
-  projectId: "pokopia-43d0d",
-  storageBucket: "pokopia-43d0d.firebasestorage.app",
-  messagingSenderId: "861406412915",
-  appId: "1:861406412915:web:a96afbf8382cce043caa06"
-  // 注：databaseURL 由 initSync 按 projectId 自动推断默认全局库；
-  // 若你的 Realtime Database 是区域化地址（带 asia-southeast1 等后缀），
-  // 请在此补一行 databaseURL: "https://pokopia-43d0d-default-rtdb.<区域>.firebasedatabase.app"
-};
-let _sync = { enabled: false, db: null, applying: false, lastPushTs: 0 };
+// ===== 云端实时同步（GitHub Gist，复用你的 GitHub 账号，无需注册新服务）=====
+// 在 https 在线网址下生效；token 仅存本机 localStorage，不写入仓库。file:// 本地双击建议直接用在线网址
+const GH_API = 'https://api.github.com';
+const GIST_KEY = 'pokopia_gist_sync';
+let _gsync = { enabled: false, token: null, gistId: null, applying: false, lastPushTs: 0, timer: null };
+function gistCfgLoad() { try { return JSON.parse(localStorage.getItem(GIST_KEY) || '{}'); } catch { return {}; } }
+function gistCfgSave(c) { localStorage.setItem(GIST_KEY, JSON.stringify(c)); }
 function setSyncStatus(kind) {
   const chip = document.getElementById('syncChip');
   if (!chip) return;
   const map = {
     local:  ['⚪', '仅本地'],
+    setup:  ['🟡', '点此启用同步'],
     online: ['🟢', '云端同步中'],
     synced: ['🔵', '已同步'],
     error:  ['🔴', '同步失败'],
@@ -972,72 +961,89 @@ function setSyncStatus(kind) {
 function loadStored() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { return {}; }
 }
-function pushBuildsToCloud(builds) {
-  if (!_sync.enabled || _sync.applying) return;
-  const ts = Date.now();
-  _sync.lastPushTs = ts;
-  _sync.db.ref('builds').set({ builds, updatedAt: ts })
-    .catch(e => { console.warn('[sync] 推送失败', e); setSyncStatus('error'); });
+async function gistApi(method, path, body, token) {
+  const opt = { method, headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' } };
+  if (body) opt.body = JSON.stringify(body);
+  const r = await fetch(GH_API + path, opt);
+  if (!r.ok) throw new Error(method + ' ' + path + ' -> ' + r.status);
+  return r.status === 204 ? null : r.json();
 }
-function syncPullNow() {
-  if (!_sync.enabled) { toast('同步未开启（请在 FIREBASE_CONFIG 填入配置并在 https 网址下使用）'); return; }
-  _sync.db.ref('builds').once('value').then(snap => {
-    const remote = snap.val() || {};
-    const remoteBuilds = remote.builds || {};
-    const local = loadStored();
-    if (JSON.stringify(remoteBuilds) === JSON.stringify(local.builds || {})) { toast('已是最新 ✓'); return; }
-    if ((remote.updatedAt || 0) >= (local.updatedAt || 0)) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ builds: remoteBuilds, updatedAt: remote.updatedAt || Date.now() }));
-      state.builds = remoteBuilds;
-      render();
-      setSyncStatus('synced');
-      toast('已从云端同步 ✓');
-    } else { toast('本地更新，无需拉取'); }
-  });
+function pushBuildsToGist(builds) {
+  if (!_gsync.enabled || _gsync.applying) return;
+  const ts = Date.now(); _gsync.lastPushTs = ts;
+  const payload = { files: { 'pokopia_builds.json': { content: JSON.stringify({ builds, updatedAt: ts }) } } };
+  gistApi('PATCH', '/gists/' + _gsync.gistId, payload, _gsync.token)
+    .then(() => setSyncStatus('synced'))
+    .catch(e => { console.warn('[gist] 推送失败', e); setSyncStatus('error'); });
 }
-async function initSync() {
-  if (!FIREBASE_CONFIG || !FIREBASE_CONFIG.apiKey || typeof firebase === 'undefined') {
-    setSyncStatus('local'); return false;
-  }
+async function gistPull() {
+  if (!_gsync.enabled || _gsync.applying) return;
   try {
-    // 自动推断 databaseURL（配置中缺失时）：默认全局库地址
-    const _cfg = Object.assign({}, FIREBASE_CONFIG);
-    if (!_cfg.databaseURL && _cfg.projectId) {
-      _cfg.databaseURL = 'https://' + _cfg.projectId + '-default-rtdb.firebaseio.com';
+    const g = await gistApi('GET', '/gists/' + _gsync.gistId, null, _gsync.token);
+    const raw = g && g.files && g.files['pokopia_builds.json'] && g.files['pokopia_builds.json'].content;
+    if (!raw) return;
+    const remote = JSON.parse(raw); const remoteBuilds = remote.builds || {};
+    const local = loadStored(); const localBuilds = local.builds || {};
+    if (JSON.stringify(remoteBuilds) === JSON.stringify(localBuilds)) return;
+    if ((remote.updatedAt || 0) <= (local.updatedAt || 0)) return;
+    _gsync.applying = true;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ builds: remoteBuilds, updatedAt: remote.updatedAt || Date.now() }));
+    state.builds = remoteBuilds; _gsync.applying = false;
+    if (state.route) render();
+    setSyncStatus('synced'); toast('已从云端同步 ✓');
+  } catch (e) { console.warn('[gist] 拉取失败', e); setSyncStatus('error'); }
+}
+async function enableGistSync(token, gistId) {
+  try {
+    await gistApi('GET', '/user', null, token); // 校验 token
+    _gsync.token = token;
+    if (!gistId) {
+      const created = await gistApi('POST', '/gists', { files: { 'pokopia_builds.json': { content: '{}' } }, description: 'Pokopia 材料单同步', public: false }, token);
+      gistId = created.id;
     }
-    if (!firebase.apps.length) firebase.initializeApp(_cfg);
-    // 公开规则模式：无需匿名登录，initializeApp 后直接用 database()
-    _sync.db = firebase.database();
-    _sync.enabled = true;
-    const ref = _sync.db.ref('builds');
-    ref.on('value', snap => {
-      const remote = snap.val() || {};
-      const remoteBuilds = remote.builds || {};
-      const local = loadStored();
-      const localBuilds = local.builds || {};
-      if (JSON.stringify(remoteBuilds) === JSON.stringify(localBuilds)) return; // 自身回声，忽略
-      if ((remote.updatedAt || 0) <= (local.updatedAt || 0)) return;            // 云端更旧，保留本地
-      _sync.applying = true;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ builds: remoteBuilds, updatedAt: remote.updatedAt || Date.now() }));
-      state.builds = remoteBuilds;
-      _sync.applying = false;
-      if (state.route) render();
-      setSyncStatus('synced');
-      toast('已从云端同步 ✓');
-    });
-    // 若云端为空而本地有数据，首次推上云
-    const cur = await ref.once('value');
-    const cv = cur.val();
-    if ((!cv || !cv.builds || Object.keys(cv.builds).length === 0) && Object.keys(loadStored().builds || {}).length) {
-      pushBuildsToCloud(loadStored().builds);
-    }
+    _gsync.gistId = gistId; _gsync.enabled = true;
+    gistCfgSave({ token, gistId });
     setSyncStatus('online');
-    return true;
-  } catch (e) {
-    console.warn('[sync] 初始化失败：', e);
-    setSyncStatus('error');
-    return false;
-  }
+    const g = await gistApi('GET', '/gists/' + gistId, null, token);
+    const raw = g.files && g.files['pokopia_builds.json'] && g.files['pokopia_builds.json'].content;
+    const remote = raw ? JSON.parse(raw) : { builds: {} };
+    if ((!remote.builds || Object.keys(remote.builds).length === 0) && Object.keys(loadStored().builds || {}).length) {
+      pushBuildsToGist(loadStored().builds);
+    } else { gistPull(); }
+    if (_gsync.timer) clearInterval(_gsync.timer);
+    _gsync.timer = setInterval(gistPull, 8000);
+    toast('同步已启用 ✓');
+  } catch (e) { console.warn('[gist] 启用失败', e); setSyncStatus('error'); toast('同步启用失败：' + e.message); }
+}
+function openSyncSetup() {
+  const cfg = gistCfgLoad();
+  const overlay = el('div', { class: 'dye-picker-overlay' });
+  const box = el('div', { class: 'dye-picker' });
+  box.appendChild(el('h3', {}, '🔗 启用云端同步（GitHub Gist）'));
+  box.appendChild(el('div', { class: 'hint' }, '复用你的 GitHub 账号，自动建私有 Gist 当同步仓库。令牌仅存本机，不进代码仓库。'));
+  const ta = el('textarea', { placeholder: '粘贴 GitHub 私人令牌 (PAT)，需 gist 权限', rows: 3 }); ta.value = cfg.token || '';
+  box.appendChild(ta);
+  const idInput = el('input', { placeholder: 'Gist ID（留空=自动新建私有 Gist）' }); idInput.value = cfg.gistId || '';
+  box.appendChild(idInput);
+  const err = el('div', { class: 'hint', style: { color: '#c0392b' } }); box.appendChild(err);
+  const btn = el('button', { class: 'btn btn-primary' }, '启用同步');
+  btn.onclick = () => {
+    const t = ta.value.trim(), gid = idInput.value.trim();
+    if (!t) { err.textContent = '请先粘贴 GitHub 令牌'; return; }
+    btn.textContent = '启用中…'; btn.disabled = true;
+    enableGistSync(t, gid || null).then(() => overlay.remove());
+  };
+  const cancel = el('button', { class: 'btn btn-secondary' }, '取消'); cancel.onclick = () => overlay.remove();
+  const footer = el('div', { class: 'dye-picker-footer' }); footer.appendChild(cancel); footer.appendChild(btn);
+  box.appendChild(footer);
+  overlay.appendChild(box);
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+function initSync() {
+  const cfg = gistCfgLoad();
+  if (cfg.token && cfg.gistId) { enableGistSync(cfg.token, cfg.gistId); }
+  else { setSyncStatus('setup'); }
 }
 function genId() { return 'b_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6); }
 
@@ -2895,10 +2901,10 @@ async function exportImages(build) {
 // ===== Init =====
 render();
 
-// ===== 云端实时同步初始化（已配置 FIREBASE_CONFIG 且在 https 下才生效）=====
+// ===== 云端实时同步初始化（GitHub Gist，在 https 在线网址下生效；token 仅存本机）=====
 initSync();
 const _syncChip = document.getElementById('syncChip');
-if (_syncChip) _syncChip.onclick = syncPullNow;
+if (_syncChip) _syncChip.onclick = () => { if (_gsync.enabled) { gistPull(); } else { openSyncSetup(); } };
 
 // ===== PWA service worker 注册（http(s) 守卫，保护本地 file:// 双击） =====
 if ((location.protocol === 'http:' || location.protocol === 'https:') && 'serviceWorker' in navigator) {
