@@ -2653,7 +2653,7 @@ async function exportImages(build) {
       const key = imgResolved(pv) || pv;  // imgId → 解到 dataUrl；dataUrl 原样；raw URL 原样
       return key && imgCache[key] ? { key } : null;
     }).filter(Boolean);
-    const badgeText = '[ ' + (sec.title || '未命名') + ' ]';
+    const badgeText = (sec.title || '未命名');
     ctx.font = `bold ${SEC_TITLE_FONT}px "PingFang SC", "Microsoft YaHei", sans-serif`;
     const badgeW = Math.round(ctx.measureText(badgeText).width) + 64;
     if (!previews.length) return { previews, badgeW, badgeText, cellW: 0, pvH: SEC_BADGE_H, gap: 12 };
